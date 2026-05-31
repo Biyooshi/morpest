@@ -912,18 +912,11 @@
 
         // Gabungkan specific list dengan CMO list kedalam array BARU
         var cmoList = picData.cmo || [];
-        var picOptions = specificList.concat(cmoList);
-        
-        // Gabungkan juga dengan legacy PIC list (tambahkan label "Legacy" ke nickname)
-        var formattedLegacyList = legacyList.map(function(pic) {
-          return {
-            name: pic.name,
-            phone: pic.phone,
-            nickname: pic.nickname + " - Legacy",
-            email: pic.email
-          };
-        });
-        picOptions = picOptions.concat(formattedLegacyList);
+        var activeOptions = specificList.concat(cmoList);
+        var legacyOptions = legacyList;
+
+        var isActiveSelected = activeOptions.some(function(pic) { return pic.name === item.picName; });
+        var isLegacySelected = !isActiveSelected && legacyOptions.some(function(pic) { return pic.name === item.picName; });
 
         // Render detail request dengan error handling
         var requestDetails = '';
@@ -1008,22 +1001,28 @@
           cardHtml += '</div>';
           cardHtml += '</div>';
           cardHtml += '</div>';
-          cardHtml += '<div class="grid grid-cols-2 gap-3 mt-3 bg-blue-50 p-3 rounded">';
-          cardHtml += '<div>';
-          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Name</label>';
+          cardHtml += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 bg-blue-50 p-3 rounded">';
           var itemId = String(item.id || '');
-          cardHtml += '<select id="pic-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onPICChange(\'' + escapeAttr(itemId) + '\')">';
-          cardHtml += '<option value="">- Pilih PIC -</option>';
-          var picOptionsHtml = '';
-          try {
-            picOptionsHtml = buildPICOptions(picOptions || [], item.picName || '');
-          } catch (e) {
-            console.error('Error building PIC options: ' + e.toString());
-            picOptionsHtml = '';
-          }
-          cardHtml += picOptionsHtml;
+          
+          // Column 1: PIC Active
+          cardHtml += '<div>';
+          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Active</label>';
+          cardHtml += '<select id="pic-active-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onActivePICChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<option value="">- Pilih PIC Active -</option>';
+          cardHtml += buildPICOptions(activeOptions || [], isActiveSelected ? item.picName : '');
           cardHtml += '</select>';
           cardHtml += '</div>';
+
+          // Column 2: PIC Legacy
+          cardHtml += '<div>';
+          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Legacy</label>';
+          cardHtml += '<select id="pic-legacy-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onLegacyPICChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<option value="">- Pilih PIC Legacy -</option>';
+          cardHtml += buildPICOptions(legacyOptions || [], isLegacySelected ? item.picName : '');
+          cardHtml += '</select>';
+          cardHtml += '</div>';
+
+          // Column 3: PIC Contact
           cardHtml += '<div>';
           cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Contact</label>';
           cardHtml += '<div class="flex items-center gap-2">';
@@ -1273,19 +1272,50 @@
       }
     }
 
-    function onPICChange(ticketId) {
-      var picSelect = document.getElementById('pic-' + ticketId);
+    function onActivePICChange(ticketId) {
+      var activeSelect = document.getElementById('pic-active-' + ticketId);
+      var legacySelect = document.getElementById('pic-legacy-' + ticketId);
       var contactInput = document.getElementById('contact-' + ticketId);
 
-      if (!picSelect) return;
+      if (!activeSelect) return;
 
-      var selectedOption = picSelect.options[picSelect.selectedIndex];
+      // Reset legacy select
+      if (legacySelect) {
+        legacySelect.value = "";
+      }
+
+      var selectedOption = activeSelect.options[activeSelect.selectedIndex];
 
       if (selectedOption && selectedOption.dataset && selectedOption.dataset.phone) {
         contactInput.value = selectedOption.dataset.phone;
-        // Auto save ketika PIC dipilih
-        saveAdminChanges(ticketId);
+      } else {
+        contactInput.value = "";
       }
+      // Auto save ketika PIC dipilih
+      saveAdminChanges(ticketId);
+    }
+
+    function onLegacyPICChange(ticketId) {
+      var activeSelect = document.getElementById('pic-active-' + ticketId);
+      var legacySelect = document.getElementById('pic-legacy-' + ticketId);
+      var contactInput = document.getElementById('contact-' + ticketId);
+
+      if (!legacySelect) return;
+
+      // Reset active select
+      if (activeSelect) {
+        activeSelect.value = "";
+      }
+
+      var selectedOption = legacySelect.options[legacySelect.selectedIndex];
+
+      if (selectedOption && selectedOption.dataset && selectedOption.dataset.phone) {
+        contactInput.value = selectedOption.dataset.phone;
+      } else {
+        contactInput.value = "";
+      }
+      // Auto save ketika PIC dipilih
+      saveAdminChanges(ticketId);
     }
 
     function onFinalLinkChange(ticketId) {
@@ -1294,16 +1324,22 @@
     }
 
     function saveAdminChanges(ticketId) {
-      var picSelect = document.getElementById('pic-' + ticketId);
+      var activeSelect = document.getElementById('pic-active-' + ticketId);
+      var legacySelect = document.getElementById('pic-legacy-' + ticketId);
       var contactInput = document.getElementById('contact-' + ticketId);
       var linkInput = document.getElementById('link-' + ticketId);
 
-      if (!picSelect || !contactInput || !linkInput) {
+      if (!contactInput || !linkInput) {
         showNotification('Error: Element tidak ditemukan', 'error');
         return;
       }
 
-      var picName = picSelect.value;
+      var picName = "";
+      if (activeSelect && activeSelect.value) {
+        picName = activeSelect.value;
+      } else if (legacySelect && legacySelect.value) {
+        picName = legacySelect.value;
+      }
       var picContact = contactInput.value;
       var finalLink = linkInput.value;
 
@@ -1328,15 +1364,21 @@
     }
 
     function sendWAPIC(event, ticketId) {
-      var picSelect = document.getElementById('pic-' + ticketId);
+      var activeSelect = document.getElementById('pic-active-' + ticketId);
+      var legacySelect = document.getElementById('pic-legacy-' + ticketId);
       var contactInput = document.getElementById('contact-' + ticketId);
 
-      if (!picSelect || !contactInput) {
+      if (!contactInput) {
         alert('Element tidak ditemukan!');
         return;
       }
 
-      var picName = picSelect.value;
+      var picName = "";
+      if (activeSelect && activeSelect.value) {
+        picName = activeSelect.value;
+      } else if (legacySelect && legacySelect.value) {
+        picName = legacySelect.value;
+      }
       var picContact = contactInput.value;
 
       if (!picName || !picContact) {
