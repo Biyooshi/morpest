@@ -57,7 +57,26 @@
         /* Table Scroll styling */
         .table-container {
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
             position: relative;
+        }
+
+        /* Custom Scrollbar */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 12px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         td {
