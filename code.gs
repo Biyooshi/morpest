@@ -309,6 +309,7 @@ function getAdminData() {
       });
     }
     
+    result.reverse();
     return { status: "success", data: result };
     
   } catch(e) {
@@ -320,15 +321,6 @@ function getAdminData() {
 // API: Get PIC Data
 // ============================================
 function getPICData() {
-  try {
-    var ss = getRequestSpreadsheet();
-    var sheets = ss.getSheets();
-    var picSheet = null;
-    for (var i=0; i<sheets.length; i++) {
-      var name = sheets[i].getName().toLowerCase();
-      if (name.indexOf("karyawan") >= 0 || name.indexOf("pic") >= 0 || name.indexOf("database") >= 0) {
-        picSheet = sheets[i];
-        break;
       }
     }
     
@@ -504,6 +496,75 @@ function getCMODashboardData() {
     picPerfArray.sort(function(a, b) { return b.total - a.total; });
     var topPIC = picPerfArray.slice(0, 10);
     
+    // WORKLOAD & URGENT ITEMS
+    var activePICs = getPICData();
+    var legacyPICs = getLegacyPICData();
+    
+    var allActivePICs = [];
+    for (var div in activePICs) {
+       activePICs[div].forEach(function(p) { allActivePICs.push({name: p.name, activeCount: 0, activeTickets: []}); });
+    }
+    
+    var allLegacyPICs = [];
+    for (var div in legacyPICs) {
+       legacyPICs[div].forEach(function(p) { allLegacyPICs.push({name: p.name, activeCount: 0, activeTickets: []}); });
+    }
+
+    for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        if (!row[0] || row[0].toString().trim() === "") continue;
+        
+        var status = (row[17] || "Pending").toString().trim();
+        var picName = (row[18] || "").toString().trim();
+        var priority = (row[6] || "").toString();
+        
+        // Populate workloads
+        if (status === "On Process" && picName) {
+            var foundActive = null;
+            for (var j = 0; j < allActivePICs.length; j++) {
+                if (allActivePICs[j].name === picName) { foundActive = allActivePICs[j]; break; }
+            }
+            if (foundActive) {
+                foundActive.activeCount++;
+                foundActive.activeTickets.push(row[0]);
+            } else {
+                var foundLegacy = null;
+                for (var j = 0; j < allLegacyPICs.length; j++) {
+                    if (allLegacyPICs[j].name === picName) { foundLegacy = allLegacyPICs[j]; break; }
+                }
+                if (foundLegacy) {
+                    foundLegacy.activeCount++;
+                    foundLegacy.activeTickets.push(row[0]);
+                }
+            }
+        }
+
+        // Populate urgent items
+        var rawDeadline = row[8];
+        if (status !== "Done" && rawDeadline) {
+            var deadlineDate = (rawDeadline instanceof Date) ? rawDeadline : new Date(rawDeadline);
+            deadlineDate.setHours(0, 0, 0, 0);
+            var diffDays = Math.round((deadlineDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 1 || priority.indexOf("Urgent") >= 0) {
+                var fullDeadline = Utilities.formatDate(deadlineDate, tz, "dd MMM yyyy");
+                urgentItems.push({
+                    id: row[0],
+                    judul: row[9] || "-",
+                    picName: picName || "-",
+                    deadline: fullDeadline,
+                    status: status,
+                    diffDays: diffDays
+                });
+            }
+        }
+    }
+    
+    // Sort workloads descending by activeCount
+    allActivePICs.sort(function(a,b) { return b.activeCount - a.activeCount; });
+    allLegacyPICs.sort(function(a,b) { return b.activeCount - a.activeCount; });
+    urgentItems.sort(function(a,b) { return a.diffDays - b.diffDays; });
+
     return {
       summary: {
         total: totalRequests,
@@ -518,7 +579,12 @@ function getCMODashboardData() {
         labels: monthLabels,
         values: monthValues
       },
-      topPIC: topPIC
+      topPIC: topPIC,
+      workloads: {
+        active: allActivePICs,
+        legacy: allLegacyPICs
+      },
+      urgentItems: urgentItems
     };
     
   } catch(e) {
