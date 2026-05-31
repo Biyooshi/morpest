@@ -321,51 +321,80 @@ function getAdminData() {
 // API: Get PIC Data
 // ============================================
 function getPICData() {
-      }
-    }
-    
-    var result = { sms: [], gd: [], cw: [], cc: [], cmo: [] };
-    
-    if (picSheet) {
-      var data = picSheet.getDataRange().getValues();
-      if (data.length > 0) {
-        var headers = data[0];
-        var nameIdx = 0, nickIdx = 1, divIdx = 2, phoneIdx = 3;
-        for (var j=0; j<headers.length; j++) {
-          var h = headers[j].toString().toLowerCase();
-          if (h.indexOf("nama") >= 0 && h.indexOf("lengkap") >= 0) nameIdx = j;
-          else if (h.indexOf("panggilan") >= 0 || h.indexOf("nick") >= 0) nickIdx = j;
-          else if (h.indexOf("divisi") >= 0 || h.indexOf("posisi") >= 0) divIdx = j;
-          else if (h.indexOf("wa") >= 0 || h.indexOf("hp") >= 0 || h.indexOf("kontak") >= 0) phoneIdx = j;
-        }
-        
-        for (var k=1; k<data.length; k++) {
-          if (!data[k][nameIdx]) continue;
-          var picObj = {
-            name: data[k][nameIdx] || "-",
-            nickname: data[k][nickIdx] || "-",
-            phone: data[k][phoneIdx] || "-"
-          };
-          var div = (data[k][divIdx] || "").toString().toLowerCase();
-          
-          if (div.indexOf("cmo") >= 0) result.cmo.push(picObj);
-          if (div.indexOf("sms") >= 0) result.sms.push(picObj);
-          if (div.indexOf("gd") >= 0 || div.indexOf("desain") >= 0 || div.indexOf("design") >= 0) result.gd.push(picObj);
-          if (div.indexOf("cw") >= 0 || div.indexOf("copy") >= 0 || div.indexOf("caption") >= 0) result.cw.push(picObj);
-          if (div.indexOf("cc") >= 0 || div.indexOf("video") >= 0 || div.indexOf("content") >= 0) result.cc.push(picObj);
-        }
-      }
-    }
-    
-    // Fallback if empty
-    if (result.sms.length === 0 && result.gd.length === 0 && result.cw.length === 0 && result.cc.length === 0) {
-       var fallback = {name: "Morpest Admin", nickname: "Admin", phone: "6285172283505"};
-       result.sms.push(fallback); result.gd.push(fallback); result.cw.push(fallback); result.cc.push(fallback);
-    }
-    return result;
-  } catch (e) {
-    return { error: e.toString() };
-  }
+  var picData = {
+    "sms": [
+      { name: "Riska Stephanie", nickname: "Ika", phone: "62895352730008", email: "riskastphnie28@gmail.com" },
+      { name: "Naya Azani", nickname: "Naya", phone: "62895391527014", email: "nayaazani13@gmail.com" },
+      { name: "Meitia Kurniawati", nickname: "Mei", phone: "6282247765358", email: "meitiakurniawati@gmail.com" },
+      { name: "Muhamad Farhan", nickname: "Aan", phone: "6289531974196", email: "aan.hans12@gmail.com" },
+      { name: "Kladya Khoirunisa' Hapsari", nickname: "Kladya", phone: "6285645111043", email: "kladyakhoirunisakh@gmail.com" },
+      { name: "Shellbitav Azazel", nickname: "Shelby", phone: "6285172283505", email: "ch3llb14z@gmail.com" }
+    ],
+    "gd": [
+      { name: "Head Graphic Designer", nickname: "Head-GD", phone: "6280808080808", email: "headgd@gmail.com" },
+      { name: "Co-Head Graphic Designer", nickname: "Co-Head-GD", phone: "6280808080808", email: "coheadgd@gmai.com" },
+      { name: "Yusmita Alya Melanie", nickname: "Alya", phone: "6285792300256", email: "yusmitaalya@gmail.com" },
+      { name: "Syafa Salsabila", nickname: "Syafa", phone: "62882003120378", email: "syafasalsabila226@gmail.com" },
+      { name: "Lidia Siregar", nickname: "Lidia", phone: "6281316207014", email: "kembaroktober06@gmail.com" },
+      { name: "Mulqy Azzam", nickname: "Azzam", phone: "6281770094378", email: "mulqyazzam41@gmail.com" }
+    ],
+    "cw": [
+      { name: "Sidik Permana", nickname: "Sidik", phone: "6285321200416", email: "sidiksipengelana@gmail.com" },
+      { name: "Ridatasa Nadiawati", nickname: "Rida", phone: "6289656144248", email: "Ridatasa@gmail.com" },
+      { name: "Sevia Rahmadani", nickname: "Via", phone: "6285709598764", email: "seviarahmadani9@gmail.com" },
+      { name: "Mayang Anggraini", nickname: "Mayang", phone: "628812756505", email: "mayanganggraini242@gmail.com" },
+      { name: "Sri Rahayu Mulyaningsih", nickname: "Ayu", phone: "62895414845637", email: "srirahayuuu2937@gmail.com" },
+      { name: "Benedict Jemima Cecilia Pietersz", nickname: "Ben", phone: "6282114887824", email: "bjcpietersz47@gmail.com" }
+    ],
+    "cc": [],
+    "cmo": [
+      { name: "Muhammad Nurul Qolbi", nickname: "Obi", phone: "6285233142178", email: "qolbi@joy.internal" }
+    ]
+  };
+  
+  return picData;
+}
+
+function getLegacyPICData() {
+  var picData = {
+    "sms": [
+      { name: "Dio", nickname: "Dio", phone: "6285814783478", email: "dio@joy.internal" },
+      { name: "Muslihah (Biru)", nickname: "Biru", phone: "6285776786184", email: "biru@joy.internal" },
+      { name: "Juhariah Ningrum", nickname: "Juju", phone: "6285251549269", email: "juju@joy.internal" },
+      { name: "Nichell", nickname: "Nichell", phone: "601123362713", email: "nichell@joy.internal" },
+      { name: "Sauma Wulandari", nickname: "Sauma", phone: "6285174076340", email: "sauma@joy.internal" },
+      { name: "Zahra Sri Rahmah", nickname: "Zahra", phone: "6282321454263", email: "zahra@joy.internal" },
+      { name: "Naili Zumna", nickname: "Naili", phone: "6285924846577", email: "naili@joy.internal" }
+    ],
+    "gd": [
+      { name: "Naufal Zuhri", nickname: "Nopal", phone: "6281331189718", email: "naufal.zuhri@joy.internal" },
+      { name: "Shafni Virginia Putri", nickname: "Shafni", phone: "6281394759578", email: "shafni@joy.internal" },
+      { name: "Nuri Ibadi Rahmania", nickname: "Nuri", phone: "628115232805", email: "nuri@joy.internal" },
+      { name: "Rosdiana Dewi", nickname: "Rosdiana", phone: "6282228190006", email: "rosdiana@joy.internal" },
+      { name: "Shellbiav Azazel", nickname: "Shelby", phone: "6285172283505", email: "shelby@joy.internal" },
+      { name: "Naufal Zuhdi", nickname: "Nopal", phone: "6281242528932", email: "naufal.zuhdi@joy.internal" },
+      { name: "Bayu Pratama", nickname: "Bayu", phone: "6282111742892", email: "bayu@joy.internal" }
+    ],
+    "cw": [
+      { name: "Astri Kania Dewi", nickname: "Astri", phone: "6281220517281", email: "astri@joy.internal" },
+      { name: "Afifah Fauziah", nickname: "Fifah", phone: "6282268973187", email: "fifah@joy.internal" },
+      { name: "Intan Nurul Fasha", nickname: "Asha", phone: "6289501941526", email: "asha@joy.internal" },
+      { name: "Nadiyah Sabilah Bintang", nickname: "Nadiya", phone: "6282283822925", email: "nadiya@joy.internal" },
+      { name: "Klosse Ignatius Siringo Ringo", nickname: "Klosse", phone: "6281290141232", email: "klosse@joy.internal" },
+      { name: "Danis Ahnaf", nickname: "Danis", phone: "6285941137220", email: "danis@joy.internal" },
+      { name: "R. AJ. Afra Aurelia Luqyandysa", nickname: "Afra", phone: "6281213403556", email: "afra@joy.internal" }
+    ],
+    "cc": [
+      { name: "Refan Regika Renggo", nickname: "Refan", phone: "6285697039805", email: "refan@joy.internal" },
+      { name: "Desy fitriyanti", nickname: "Desy", phone: "6289630585603", email: "desy@joy.internal" },
+      { name: "Caitlin Gabriella Rahardjan", nickname: "Caitlin", phone: "62818862341", email: "caitlin@joy.internal" },
+      { name: "Falisha Azzahra Dinarsanti", nickname: "Fale", phone: "6285157341440", email: "fale@joy.internal" },
+      { name: "Mia Kultsum Safitri", nickname: "Mia", phone: "6288980237068", email: "mia@joy.internal" },
+      { name: "Qonita Tsaltsa Earlyana", nickname: "Qonita", phone: "6285156903647", email: "qonita@joy.internal" }
+    ]
+  };
+  
+  return picData;
 }
 
 // ============================================
