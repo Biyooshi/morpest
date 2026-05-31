@@ -894,22 +894,36 @@
 
         // Tentukan PIC options berdasarkan jenis request
         var specificList = [];
-        var jenis = item.jenis || '';
-        if (jenis.indexOf("SMS") >= 0) {
+        var legacyList = [];
+        var jenis = (item.jenis || '').toUpperCase();
+        if (jenis.indexOf("SMS") >= 0 || jenis.indexOf("UPLOAD KONTEN") >= 0) {
           specificList = picData.sms || [];
-        } else if (jenis.indexOf("GD") >= 0) {
+          legacyList = (picData.legacy && picData.legacy.sms) || [];
+        } else if (jenis.indexOf("GD") >= 0 || jenis.indexOf("DESIGN") >= 0) {
           specificList = picData.gd || [];
-        } else if (jenis.indexOf("CW") >= 0) {
+          legacyList = (picData.legacy && picData.legacy.gd) || [];
+        } else if (jenis.indexOf("CW") >= 0 || jenis.indexOf("CAPTION") >= 0) {
           specificList = picData.cw || [];
-        } else if (jenis.indexOf("CC") >= 0) {
+          legacyList = (picData.legacy && picData.legacy.cw) || [];
+        } else if (jenis.indexOf("CC") >= 0 || jenis.indexOf("VIDEO") >= 0) {
           specificList = picData.cc || [];
+          legacyList = (picData.legacy && picData.legacy.cc) || [];
         }
 
         // Gabungkan specific list dengan CMO list kedalam array BARU
-        // CRITICAL FIX: Jangan gunakan push() ke array existing (mutasi data asli),
-        // tapi buat array baru dengan concat() agar data tidak terduplikasi terus menerus
         var cmoList = picData.cmo || [];
         var picOptions = specificList.concat(cmoList);
+        
+        // Gabungkan juga dengan legacy PIC list (tambahkan label "Legacy" ke nickname)
+        var formattedLegacyList = legacyList.map(function(pic) {
+          return {
+            name: pic.name,
+            phone: pic.phone,
+            nickname: pic.nickname + " - Legacy",
+            email: pic.email
+          };
+        });
+        picOptions = picOptions.concat(formattedLegacyList);
 
         // Render detail request dengan error handling
         var requestDetails = '';

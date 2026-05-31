@@ -373,6 +373,7 @@ function getPICData() {
     ]
   };
   
+  picData.legacy = getLegacyPICData();
   return picData;
 }
 
