@@ -635,6 +635,7 @@ function getCMODashboardData() {
     
     var allActivePICs = [];
     for (var div in activePICs) {
+       if (!Array.isArray(activePICs[div])) continue;
        activePICs[div].forEach(function(p) { allActivePICs.push({name: p.name, activeCount: 0, doneCount: 0, totalCount: 0, activeTickets: []}); });
     }
     
