@@ -399,7 +399,7 @@ function getLegacyPICData() {
     ],
     "cw": [
       { name: "Astri Kania Dewi", nickname: "Astri", phone: "6281220517281", email: "astri@joy.internal" },
-      { name: "Afifah Fauziah", nickname: "Fifah", phone: "6282268973187", email: "fifah@joy.internal" },
+      { name: "Afifah Fauziah", nickname: "Fifah", phone: "6282268973187", email: "fifahzyelianna@gmail.com" },
       { name: "Intan Nurul Fasha", nickname: "Asha", phone: "6289501941526", email: "asha@joy.internal" },
       { name: "Nadiyah Sabilah Bintang", nickname: "Nadiya", phone: "6282283822925", email: "nadiya@joy.internal" },
       { name: "Klosse Ignatius Siringo Ringo", nickname: "Klosse", phone: "6281290141232", email: "klosse@joy.internal" },

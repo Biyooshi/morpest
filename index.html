@@ -208,6 +208,11 @@
             <!-- Options populated by JS -->
           </select>
         </div>
+        <div class="relative w-full md:w-64 md:ml-auto">
+          <input type="text" id="adminSearch" placeholder="Cari Ticket, Nama, Judul..." oninput="applyAdminFilters()"
+            class="text-black text-sm p-2 rounded pl-9 w-full border-none focus:ring-2 focus:ring-orange-500 outline-none">
+          <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+        </div>
       </div>
     </div>
 
@@ -826,17 +831,20 @@
     function applyAdminFilters() {
       var statusFilterEl = document.getElementById('adminStatusFilter');
       var monthFilterEl = document.getElementById('adminMonthFilter');
+      var adminSearchEl = document.getElementById('adminSearch');
+      
       var statusFilter = (statusFilterEl && statusFilterEl.value ? statusFilterEl.value : 'all').toLowerCase();
       var monthFilter = (monthFilterEl && monthFilterEl.value ? monthFilterEl.value : 'all');
-
+      var searchKeyword = (adminSearchEl && adminSearchEl.value ? adminSearchEl.value : '').toLowerCase();
+ 
       var filteredData = [];
       for (var i = 0; i < allAdminData.length; i++) {
         var item = allAdminData[i];
-
+ 
         // Filter Status
         var statusValue = (item.status || 'Pending').toLowerCase();
         if (statusFilter !== 'all' && statusValue !== statusFilter) continue;
-
+ 
         // Filter Month (Based on submittedAt timestamp if available or parse date?)
         // item.submittedAt is formatted string "dd MMM yyyy, HH:mm"
         // Better to use raw date from properties if available? 
@@ -870,6 +878,18 @@
           }
         }
 
+        // Filter Search Keyword
+        if (searchKeyword !== '') {
+          var searchableText = (
+            (item.id || '') + ' ' + 
+            (item.requester || '') + ' ' + 
+            (item.judul || '') + ' ' + 
+            (item.picName || '') + ' ' + 
+            (item.jenis || '')
+          ).toLowerCase();
+          if (searchableText.indexOf(searchKeyword) === -1) continue;
+        }
+ 
         filteredData.push(item);
       }
 
@@ -1001,8 +1021,18 @@
           cardHtml += '</div>';
           cardHtml += '</div>';
           cardHtml += '</div>';
-          cardHtml += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 bg-blue-50 p-3 rounded">';
           var itemId = String(item.id || '');
+          var ticketNum = 0;
+          if (itemId && itemId.indexOf("-") >= 0) {
+            ticketNum = parseInt(itemId.split("-")[1]) || 0;
+          }
+          var showLegacy = (ticketNum >= 1001 && ticketNum <= 1190);
+
+          if (showLegacy) {
+            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 bg-blue-50 p-3 rounded">';
+          } else {
+            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 bg-blue-50 p-3 rounded">';
+          }
           
           // Column 1: PIC Active
           cardHtml += '<div>';
@@ -1014,13 +1044,15 @@
           cardHtml += '</div>';
 
           // Column 2: PIC Legacy
-          cardHtml += '<div>';
-          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Legacy</label>';
-          cardHtml += '<select id="pic-legacy-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onLegacyPICChange(\'' + escapeAttr(itemId) + '\')">';
-          cardHtml += '<option value="">- Pilih PIC Legacy -</option>';
-          cardHtml += buildPICOptions(legacyOptions || [], isLegacySelected ? item.picName : '');
-          cardHtml += '</select>';
-          cardHtml += '</div>';
+          if (showLegacy) {
+            cardHtml += '<div>';
+            cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Legacy</label>';
+            cardHtml += '<select id="pic-legacy-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onLegacyPICChange(\'' + escapeAttr(itemId) + '\')">';
+            cardHtml += '<option value="">- Pilih PIC Legacy -</option>';
+            cardHtml += buildPICOptions(legacyOptions || [], isLegacySelected ? item.picName : '');
+            cardHtml += '</select>';
+            cardHtml += '</div>';
+          }
 
           // Column 3: PIC Contact
           cardHtml += '<div>';
