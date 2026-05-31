@@ -243,6 +243,7 @@ function getAdminData() {
     
     var data = sheet.getDataRange().getValues();
     var tz = ss.getSpreadsheetTimeZone();
+    var result = [];
     
     for (var i = 1; i < data.length; i++) {
       if (!data[i][0] || data[i][0].toString().trim() === "") continue;
