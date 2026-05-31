@@ -181,12 +181,12 @@ function processForm(formObject) {
     // --- SEND NOTIFICATIONS ---
     var adminMsg = "*NEW REQUEST MORPEST*\n\nTicket ID: " + ticketId + "\nDari: " + (formObject.reqName || "-") + " (" + (formObject.reqPosition || "-") + ")\nJudul: " + (formObject.reqTitle || "-") + "\nJenis: " + jenisRequest + "\nDeadline: " + (formObject.reqDeadline || "-") + "\n\nHarap segera di-assign ke PIC yang bertugas.";
     sendWhatsAppMessage("6285233142178", adminMsg); // Admin Obi
-    sendEmailNotification("iniakunkuliah14@gmail.com", "New Request: " + ticketId, adminMsg.replace(/\n/g, '<br>')); // CMO gets explicit admin email
+    sendEmailNotification("qolbimuhammad00@gmail.com", "New Request: " + ticketId, adminMsg.replace(/\n/g, '<br>')); // CMO gets explicit admin email
     
     var reqMsg = "*REQUEST BERHASIL DIBUAT*\n\nHalo " + (formObject.reqNickname || "-") + ",\nRequest kamu dengan judul *" + (formObject.reqTitle || "-") + "* telah diterima.\nTicket ID: *" + ticketId + "*\n\nKamu dapat mengecek status requestmu di halaman Request Status Checker. Terima kasih!\n_Job On Yours Marketing_";
     sendWhatsAppMessage(formObject.reqContact, reqMsg);
     if (formObject.reqEmail) {
-      sendEmailNotification(formObject.reqEmail, "Request Berhasil Dibuat: " + ticketId, reqMsg.replace(/\n/g, '<br>'), "iniakunkuliah14@gmail.com");
+      sendEmailNotification(formObject.reqEmail, "Request Berhasil Dibuat: " + ticketId, reqMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
     }
 
     return { 
@@ -474,25 +474,25 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
            var doneMsg = "*REQUEST SELESAI*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") telah selesai dikerjakan!\n\nLink Hasil: " + (finalLinkVal || "-") + "\n\nTerima kasih,\n_Job On Yours Marketing_";
            sendWhatsAppMessage(reqContact, doneMsg);
            if (reqEmail && reqEmail !== "-") {
-             sendEmailNotification(reqEmail, "Request Selesai: " + ticketId, doneMsg.replace(/\n/g, '<br>'), "iniakunkuliah14@gmail.com");
+             sendEmailNotification(reqEmail, "Request Selesai: " + ticketId, doneMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
            } else {
-             sendEmailNotification("iniakunkuliah14@gmail.com", "Request Selesai: " + ticketId, doneMsg.replace(/\n/g, '<br>'));
+             sendEmailNotification("qolbimuhammad00@gmail.com", "Request Selesai: " + ticketId, doneMsg.replace(/\n/g, '<br>'));
            }
            
            if (picVal) {
               var picInfo = getPICInfo(picVal);
               if (picInfo && picInfo.email) {
                  var picMsg = "Halo " + picInfo.nickname + ",\nTugas *" + reqTitle + "* (Ticket: " + ticketId + ") telah ditandai SELESAI.";
-                 sendEmailNotification(picInfo.email, "Tugas Selesai: " + ticketId, picMsg.replace(/\n/g, '<br>'), "iniakunkuliah14@gmail.com");
+                 sendEmailNotification(picInfo.email, "Tugas Selesai: " + ticketId, picMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
               }
            }
         } else if (newStatus !== oldStatus && newStatus === "On Process") {
            var procMsg = "*REQUEST DIPROSES*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picVal + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
            sendWhatsAppMessage(reqContact, procMsg);
            if (reqEmail && reqEmail !== "-") {
-             sendEmailNotification(reqEmail, "Request Diproses: " + ticketId, procMsg.replace(/\n/g, '<br>'), "iniakunkuliah14@gmail.com");
+             sendEmailNotification(reqEmail, "Request Diproses: " + ticketId, procMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
            } else {
-             sendEmailNotification("iniakunkuliah14@gmail.com", "Request Diproses: " + ticketId, procMsg.replace(/\n/g, '<br>'));
+             sendEmailNotification("qolbimuhammad00@gmail.com", "Request Diproses: " + ticketId, procMsg.replace(/\n/g, '<br>'));
            }
            
            if (picVal) {
@@ -501,7 +501,7 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
                  var picMsg = "Halo " + picInfo.nickname + ",\nKamu telah ditugaskan untuk mengerjakan *" + reqTitle + "* (Ticket: " + ticketId + ").\nMohon segera dikerjakan sesuai deadline.";
                  sendWhatsAppMessage(picInfo.phone, picMsg);
                  if (picInfo.email) {
-                    sendEmailNotification(picInfo.email, "Tugas Baru: " + ticketId, picMsg.replace(/\n/g, '<br>'), "iniakunkuliah14@gmail.com");
+                    sendEmailNotification(picInfo.email, "Tugas Baru: " + ticketId, picMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
                  }
               }
            }
