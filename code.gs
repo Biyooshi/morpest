@@ -34,6 +34,12 @@ function doPost(e) {
       result = getAdminData();
     } else if (func === "getCMODashboardData") {
       result = getCMODashboardData();
+    } else if (func === "getPICData") {
+      result = getPICData();
+    } else if (func === "updateTicketData") {
+      result = updateTicketData(params[0], params[1], params[2], params[3], params[4]);
+    } else if (func === "deleteRequest") {
+      result = deleteRequest(params[0]);
     } else {
       result = { error: "Function not found" };
     }
@@ -236,32 +242,69 @@ function getAdminData() {
     if (!sheet) return { error: "Sheet tidak ditemukan" };
     
     var data = sheet.getDataRange().getValues();
-    var result = [];
-
+    var tz = ss.getSpreadsheetTimeZone();
+    
     for (var i = 1; i < data.length; i++) {
       if (!data[i][0] || data[i][0].toString().trim() === "") continue;
       
+      var deadlineDate = data[i][8] ? new Date(data[i][8]) : null;
+      var status = data[i][17] || "Pending";
+      var countdown = "";
+      
+      if (deadlineDate) {
+        var today = new Date();
+        today.setHours(0,0,0,0);
+        var target = new Date(deadlineDate);
+        target.setHours(0,0,0,0);
+        var diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+        if (status === "Done") {
+          countdown = "Done";
+        } else if (diffDays < 0) {
+          countdown = "TERLEWAT " + Math.abs(diffDays) + " Hari";
+        } else if (diffDays === 0) {
+          countdown = "HARI INI";
+        } else {
+          countdown = diffDays + " Hari lagi";
+        }
+      }
+      
+      var submittedAt = "";
+      if (data[i][1]) {
+         try {
+           submittedAt = Utilities.formatDate(new Date(data[i][1]), tz, "dd MMM yyyy, HH:mm");
+         } catch(e) {}
+      }
+      var fullDeadline = "";
+      if (deadlineDate) {
+         try {
+           fullDeadline = Utilities.formatDate(deadlineDate, tz, "dd MMM yyyy");
+         } catch(e) {}
+      }
+      
       result.push({
-        ticketId: data[i][0],
+        id: data[i][0],
         timestamp: data[i][1],
-        nama: data[i][2],
+        submittedAt: submittedAt,
+        requester: data[i][2] || "-",
         nickname: data[i][3],
-        contact: data[i][4],
-        position: data[i][5],
+        reqContact: data[i][4] || "-",
+        divisi: data[i][5] || "-",
         priority: data[i][6],
-        jenis: data[i][7],
+        jenis: data[i][7] || "-",
         deadline: data[i][8],
-        judul: data[i][9],
+        fullDeadline: fullDeadline,
+        judul: data[i][9] || "-",
         brief: data[i][10],
         linkRef: data[i][11],
         format: data[i][12],
         tone: data[i][13],
         audience: data[i][14],
         duration: data[i][15],
-        status: data[i][17] || "Pending",
-        pic: data[i][18] || "-",
+        status: status,
+        picName: data[i][18] || "-",
         picContact: data[i][19] || "-",
-        finalLink: data[i][20] || ""
+        finalLink: data[i][20] || "",
+        countdown: countdown
       });
     }
     
@@ -269,6 +312,112 @@ function getAdminData() {
     
   } catch(e) {
     return { error: e.toString() };
+  }
+}
+
+// ============================================
+// API: Get PIC Data
+// ============================================
+function getPICData() {
+  try {
+    var ss = getRequestSpreadsheet();
+    var sheets = ss.getSheets();
+    var picSheet = null;
+    for (var i=0; i<sheets.length; i++) {
+      var name = sheets[i].getName().toLowerCase();
+      if (name.indexOf("karyawan") >= 0 || name.indexOf("pic") >= 0 || name.indexOf("database") >= 0) {
+        picSheet = sheets[i];
+        break;
+      }
+    }
+    
+    var result = { sms: [], gd: [], cw: [], cc: [], cmo: [] };
+    
+    if (picSheet) {
+      var data = picSheet.getDataRange().getValues();
+      if (data.length > 0) {
+        var headers = data[0];
+        var nameIdx = 0, nickIdx = 1, divIdx = 2, phoneIdx = 3;
+        for (var j=0; j<headers.length; j++) {
+          var h = headers[j].toString().toLowerCase();
+          if (h.indexOf("nama") >= 0 && h.indexOf("lengkap") >= 0) nameIdx = j;
+          else if (h.indexOf("panggilan") >= 0 || h.indexOf("nick") >= 0) nickIdx = j;
+          else if (h.indexOf("divisi") >= 0 || h.indexOf("posisi") >= 0) divIdx = j;
+          else if (h.indexOf("wa") >= 0 || h.indexOf("hp") >= 0 || h.indexOf("kontak") >= 0) phoneIdx = j;
+        }
+        
+        for (var k=1; k<data.length; k++) {
+          if (!data[k][nameIdx]) continue;
+          var picObj = {
+            name: data[k][nameIdx] || "-",
+            nickname: data[k][nickIdx] || "-",
+            phone: data[k][phoneIdx] || "-"
+          };
+          var div = (data[k][divIdx] || "").toString().toLowerCase();
+          
+          if (div.indexOf("cmo") >= 0) result.cmo.push(picObj);
+          if (div.indexOf("sms") >= 0) result.sms.push(picObj);
+          if (div.indexOf("gd") >= 0 || div.indexOf("desain") >= 0 || div.indexOf("design") >= 0) result.gd.push(picObj);
+          if (div.indexOf("cw") >= 0 || div.indexOf("copy") >= 0 || div.indexOf("caption") >= 0) result.cw.push(picObj);
+          if (div.indexOf("cc") >= 0 || div.indexOf("video") >= 0 || div.indexOf("content") >= 0) result.cc.push(picObj);
+        }
+      }
+    }
+    
+    // Fallback if empty
+    if (result.sms.length === 0 && result.gd.length === 0 && result.cw.length === 0 && result.cc.length === 0) {
+       var fallback = {name: "Morpest Admin", nickname: "Admin", phone: "6285172283505"};
+       result.sms.push(fallback); result.gd.push(fallback); result.cw.push(fallback); result.cc.push(fallback);
+    }
+    return result;
+  } catch (e) {
+    return { error: e.toString() };
+  }
+}
+
+// ============================================
+// API: Update Ticket Data
+// ============================================
+function updateTicketData(ticketId, picName, picContact, status, finalLink) {
+  try {
+    var sheet = getRequestSheet();
+    if (!sheet) return "Error: Sheet not found";
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][0].toString() === ticketId) {
+        if (picName) sheet.getRange(i + 1, 19).setValue(picName);
+        if (picContact) sheet.getRange(i + 1, 20).setValue(picContact);
+        if (status) sheet.getRange(i + 1, 18).setValue(status);
+        if (finalLink !== undefined && finalLink !== null && finalLink !== '') {
+           sheet.getRange(i + 1, 21).setValue(finalLink);
+           sheet.getRange(i + 1, 18).setValue("Done");
+        }
+        return "Success";
+      }
+    }
+    return "Error: Ticket not found";
+  } catch(e) {
+    return "Error: " + e.toString();
+  }
+}
+
+// ============================================
+// API: Delete Request
+// ============================================
+function deleteRequest(ticketId) {
+  try {
+    var sheet = getRequestSheet();
+    if (!sheet) return { success: false, message: "Sheet not found" };
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][0].toString() === ticketId) {
+        sheet.deleteRow(i + 1);
+        return { success: true };
+      }
+    }
+    return { success: false, message: "Ticket not found" };
+  } catch(e) {
+    return { success: false, message: e.toString() };
   }
 }
 
