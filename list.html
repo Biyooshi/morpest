@@ -119,21 +119,33 @@
         </div>
 
         <div
-            class="bg-gray-100 border-b border-gray-200 px-4 py-3 text-sm text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <label for="statusFilter" class="font-semibold text-gray-700">Filter Status:</label>
-                <select id="statusFilter" class="border rounded px-3 py-2 text-sm bg-white">
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="on process">On Process</option>
-                    <option value="done">Done</option>
-                </select>
+            class="bg-gray-100 border-b border-gray-200 px-4 py-3 text-sm text-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label for="statusFilter" class="font-semibold text-gray-700">Filter Status:</label>
+                    <select id="statusFilter" class="border rounded px-3 py-2 text-sm bg-white">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="on process">On Process</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="monthFilter" class="font-semibold text-gray-700">Filter Bulan:</label>
+                    <select id="monthFilter" class="border rounded px-3 py-2 text-sm bg-white">
+                        <option value="all">All Months</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <label for="monthFilter" class="font-semibold text-gray-700">Filter Bulan:</label>
-                <select id="monthFilter" class="border rounded px-3 py-2 text-sm bg-white">
-                    <option value="all">All Months</option>
-                </select>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative">
+                    <input type="text" id="globalSearch" placeholder="Cari Ticket, Nama, Judul..." 
+                        class="border rounded-lg pl-9 pr-3 py-2 text-sm bg-white w-full md:w-64 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                </div>
+                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold shadow transition-colors flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i>Export CSV
+                </button>
             </div>
         </div>
 
@@ -224,8 +236,11 @@
         function attachFilterHandlers() {
             var statusFilter = document.getElementById('statusFilter');
             var monthFilter = document.getElementById('monthFilter');
+            var globalSearch = document.getElementById('globalSearch');
+            
             if (statusFilter) statusFilter.addEventListener('change', applyFilters);
             if (monthFilter) monthFilter.addEventListener('change', applyFilters);
+            if (globalSearch) globalSearch.addEventListener('input', applyFilters);
         }
 
         // --- Fungsi handleSort (Dipanggil saat Header diklik) ---
@@ -246,8 +261,11 @@
         function applyFilters() {
             var statusFilterEl = document.getElementById('statusFilter');
             var monthFilterEl = document.getElementById('monthFilter');
+            var globalSearchEl = document.getElementById('globalSearch');
+            
             var statusFilter = (statusFilterEl && statusFilterEl.value ? statusFilterEl.value : 'all').toLowerCase();
             var monthFilter = (monthFilterEl && monthFilterEl.value ? monthFilterEl.value : 'all');
+            var searchKeyword = (globalSearchEl && globalSearchEl.value ? globalSearchEl.value : '').toLowerCase();
 
             // A. FILTERING
             filteredData = [];
@@ -262,6 +280,17 @@
                     if (isNaN(dateVal)) continue;
                     var monthKey = dateVal.getFullYear() + '-' + String(dateVal.getMonth() + 1).padStart(2, '0');
                     if (monthKey !== monthFilter) continue;
+                }
+
+                if (searchKeyword !== '') {
+                    var searchableText = (
+                        (row.id || '') + ' ' + 
+                        (row.requester || '') + ' ' + 
+                        (row.judul || '') + ' ' + 
+                        (row.picName || '') + ' ' + 
+                        (row.jenis || '')
+                    ).toLowerCase();
+                    if (searchableText.indexOf(searchKeyword) === -1) continue;
                 }
 
                 filteredData.push(row);
@@ -475,6 +504,47 @@
             .catch(function (error) {
                 alert('Error: ' + (error.message || error));
             });
+        }
+        
+        function exportToCSV() {
+            if (!filteredData || filteredData.length === 0) {
+                alert("Tidak ada data untuk diexport!");
+                return;
+            }
+            
+            var headers = ["Ticket ID", "Timestamp", "Requester", "Nickname", "Contact", "Divisi", "Priority", "Jenis", "Deadline", "Judul", "Brief", "Link Ref", "Format", "Tone", "Audience", "Duration", "PIC Name", "PIC Contact", "Final Link", "Status"];
+            var csvRows = [];
+            csvRows.push(headers.join(","));
+            
+            for (var i = 0; i < filteredData.length; i++) {
+                var r = filteredData[i];
+                var rowArr = [
+                    r.id, r.submittedAt, r.requester, r.nickname, r.reqContact, r.divisi, r.priority, r.jenis, r.fullDeadline,
+                    r.judul, r.brief, r.linkRef, r.format, r.tone, r.audience, r.duration, r.picName, r.picContact, r.finalLink, r.status
+                ];
+                
+                // Escape commas and quotes
+                var escapedRow = rowArr.map(function(val) {
+                    var str = (val || "").toString().replace(/"/g, '""');
+                    if (str.search(/("|,|\n)/g) >= 0) {
+                        str = '"' + str + '"';
+                    }
+                    return str;
+                });
+                
+                csvRows.push(escapedRow.join(","));
+            }
+            
+            var csvString = csvRows.join("\n");
+            var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement("a");
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Morpest_Requests_" + new Date().toISOString().slice(0,10) + ".csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>

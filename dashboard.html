@@ -162,6 +162,31 @@
     .google-visualization-text {
       font-family: 'Poppins', sans-serif !important;
     }
+    
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+      }
+      .stat-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        box-shadow: none;
+        color: #000;
+      }
+      .stat-card div { color: #000 !important; }
+      #mainNav, #adminHeader, #printBtn, #autoAssignBtn, #refreshBtn, a[href="/"] {
+        display: none !important;
+      }
+      .chart-card {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+        break-inside: avoid;
+      }
+      .bg-gray-900\/80 { background: transparent !important; border: none !important; }
+      h1 { color: #000 !important; }
+      .text-orange-300 { color: #f16527 !important; }
+    }
   </style>
 </head>
 
@@ -190,6 +215,10 @@
       <button onclick="loadDashboard()" id="refreshBtn"
         class="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg backdrop-blur-sm">
         <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button onclick="window.print()" id="printBtn"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg">
+        <i class="fas fa-print"></i> Export PDF
       </button>
       <button onclick="runAutoAssign()" id="autoAssignBtn"
         class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-orange-500/30">
@@ -253,12 +282,12 @@
         <div class="text-red-400/70 text-xs font-medium">Lewat deadline</div>
       </div>
       <div class="stat-card animate-fade-in-up relative overflow-hidden" style="animation-delay: 0.5s">
-        <div class="absolute -right-4 -top-4 text-blue-500/10 text-7xl"><i class="fas fa-chart-line"></i></div>
+        <div class="absolute -right-4 -top-4 text-purple-500/10 text-7xl"><i class="fas fa-stopwatch"></i></div>
         <div
-          class="text-blue-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2 relative z-10"><i
-            class="fas fa-percentage"></i> Done Rate</div>
-        <div id="statDoneRateBig" class="text-blue-400 text-4xl font-extrabold mb-1 relative z-10">—%</div>
-        <div class="text-blue-400/70 text-xs font-medium relative z-10">Kinerja keseluruhan</div>
+          class="text-purple-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2 relative z-10"><i
+            class="fas fa-clock"></i> Avg Lead Time</div>
+        <div id="statAvgTime" class="text-purple-400 text-4xl font-extrabold mb-1 relative z-10">—</div>
+        <div class="text-purple-400/70 text-xs font-medium relative z-10">Rata-rata pengerjaan</div>
       </div>
     </div>
 
@@ -456,7 +485,7 @@
       document.getElementById('statPending').textContent = s.pending;
       document.getElementById('statOverdue').textContent = s.overdue;
       document.getElementById('statDoneRate').textContent = s.doneRate + '% completion';
-      document.getElementById('statDoneRateBig').textContent = s.doneRate + '%';
+      document.getElementById('statAvgTime').textContent = s.avgCompletionTime + ' Hr';
     }
 
     /* -------- CHARTS -------- */

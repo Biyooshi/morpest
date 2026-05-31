@@ -168,6 +168,13 @@ function processForm(formObject) {
     sheet.appendRow(rowData);
     SpreadsheetApp.flush();
     
+    // --- SEND NOTIFICATIONS ---
+    var adminMsg = "*NEW REQUEST MORPEST*\n\nTicket ID: " + ticketId + "\nDari: " + (formObject.reqName || "-") + " (" + (formObject.reqPosition || "-") + ")\nJudul: " + (formObject.reqTitle || "-") + "\nJenis: " + jenisRequest + "\nDeadline: " + (formObject.reqDeadline || "-") + "\n\nHarap segera di-assign ke PIC yang bertugas.";
+    sendWhatsAppMessage("6285233142178", adminMsg); // Admin Obi
+    
+    var reqMsg = "*REQUEST BERHASIL DIBUAT*\n\nHalo " + (formObject.reqNickname || "-") + ",\nRequest kamu dengan judul *" + (formObject.reqTitle || "-") + "* telah diterima.\nTicket ID: *" + ticketId + "*\n\nKamu dapat mengecek status requestmu di halaman Request Status Checker. Terima kasih!\n_Job On Yours Marketing_";
+    sendWhatsAppMessage(formObject.reqContact, reqMsg);
+
     return { 
       status: "success", 
       ticketId: ticketId, 
@@ -407,13 +414,36 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
     var data = sheet.getDataRange().getValues();
     for (var i = 1; i < data.length; i++) {
       if (data[i][0] && data[i][0].toString() === ticketId) {
+        var oldStatus = data[i][17];
+        var reqName = data[i][2];
+        var reqContact = data[i][4];
+        var reqTitle = data[i][9];
+        
         if (picName) sheet.getRange(i + 1, 19).setValue(picName);
         if (picContact) sheet.getRange(i + 1, 20).setValue(picContact);
         if (status) sheet.getRange(i + 1, 18).setValue(status);
+        
+        var newStatus = status || oldStatus;
+        
         if (finalLink !== undefined && finalLink !== null && finalLink !== '') {
            sheet.getRange(i + 1, 21).setValue(finalLink);
            sheet.getRange(i + 1, 18).setValue("Done");
+           newStatus = "Done";
         }
+        
+        if (newStatus === "Done" && oldStatus !== "Done") {
+           sheet.getRange(i + 1, 22).setValue(new Date()); // Save Completed At
+        }
+        
+        // Notify Requester on status change
+        if (newStatus !== oldStatus && newStatus === "Done") {
+           var doneMsg = "*REQUEST SELESAI*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") telah selesai dikerjakan!\n\nLink Hasil: " + (finalLink || "-") + "\n\nTerima kasih,\n_Job On Yours Marketing_";
+           sendWhatsAppMessage(reqContact, doneMsg);
+        } else if (newStatus !== oldStatus && newStatus === "On Process") {
+           var procMsg = "*REQUEST DIPROSES*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + (picName || data[i][18]) + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
+           sendWhatsAppMessage(reqContact, procMsg);
+        }
+        
         return "Success";
       }
     }
@@ -460,6 +490,7 @@ function getCMODashboardData() {
     var totalOnProcess = 0;
     var totalPending = 0;
     var totalOverdue = 0;
+    var totalLeadTimeDays = 0;
     var byType = { "SMS": 0, "GD": 0, "CW": 0, "CC": 0 };
     var byMonth = {};
     var picPerf = {};
@@ -476,7 +507,16 @@ function getCMODashboardData() {
       var jenis = (row[7] || "").toString();
       var picName = (row[18] || "").toString().trim();
       
-      if (status === "Done") totalDone++;
+      if (status === "Done") {
+        totalDone++;
+        var startTs = (row[1] instanceof Date) ? row[1] : new Date(row[1]);
+        var endTs = row[21] ? ((row[21] instanceof Date) ? row[21] : new Date(row[21])) : new Date(); // Col 22 is index 21
+        if (!isNaN(startTs.getTime()) && !isNaN(endTs.getTime())) {
+            var diff = Math.round((endTs - startTs) / (1000 * 60 * 60 * 24));
+            if (diff < 0) diff = 0;
+            totalLeadTimeDays += diff;
+        }
+      }
       else if (status === "On Process") totalOnProcess++;
       else totalPending++;
       
@@ -601,7 +641,8 @@ function getCMODashboardData() {
         onProcess: totalOnProcess,
         pending: totalPending,
         overdue: totalOverdue,
-        doneRate: totalRequests > 0 ? Math.round((totalDone / totalRequests) * 100) : 0
+        doneRate: totalRequests > 0 ? Math.round((totalDone / totalRequests) * 100) : 0,
+        avgCompletionTime: totalDone > 0 ? (totalLeadTimeDays / totalDone).toFixed(1) : 0
       },
       byType: byType,
       byMonth: {
@@ -618,5 +659,60 @@ function getCMODashboardData() {
     
   } catch(e) {
     return { error: e.toString() };
+  }
+}
+
+// ============================================
+// API: Notifications (Email & WhatsApp)
+// ============================================
+var FONNTE_TOKEN = '9PkBs4SoEG15Qbw8mVBd';
+
+function sendEmailNotification(to, subject, bodyHtml) {
+  try {
+    MailApp.sendEmail({
+      to: to,
+      subject: subject,
+      htmlBody: bodyHtml,
+      name: "Morpest JOY"
+    });
+    return true;
+  } catch(e) {
+    Logger.log("Email Error: " + e.toString());
+    return false;
+  }
+}
+
+function sendWhatsAppMessage(targetNumber, message) {
+  if (!targetNumber || targetNumber === "-") return false;
+  try {
+    var cleanNumber = targetNumber.toString().replace(/\D/g, '');
+    if (cleanNumber.startsWith('0')) {
+      cleanNumber = '62' + cleanNumber.substring(1);
+    }
+    
+    var url = "https://api.fonnte.com/send";
+    var options = {
+      "method": "post",
+      "headers": {
+        "Authorization": FONNTE_TOKEN
+      },
+      "payload": {
+        "target": cleanNumber,
+        "message": message,
+        "delay": "2"
+      },
+      "muteHttpExceptions": true
+    };
+    
+    var response = UrlFetchApp.fetch(url, options);
+    Logger.log("WA Response: " + response.getContentText());
+    
+    // Opsional kirim ke email juga jika mau
+    // sendEmailNotification("qolbimuhammad00@gmail.com", "Morpest Notification", message.replace(/\n/g, '<br>'));
+    
+    return true;
+  } catch(e) {
+    Logger.log("WA Error: " + e.toString());
+    return false;
   }
 }
