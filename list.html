@@ -254,8 +254,14 @@
                     var valA = a[currentSort.column];
                     var valB = b[currentSort.column];
 
+                    if (valA === undefined || valA === null) valA = "";
+                    if (valB === undefined || valB === null) valB = "";
+
+                    var compA = valA.toString().toLowerCase();
+                    var compB = valB.toString().toLowerCase();
+
                     // Khusus Ticket ID (MKT-1001), ambil angkanya saja biar urut
-                    if (currentSort.column === 0) {
+                    if (currentSort.column === 'id') {
                         var numA = parseInt(compA.replace(/\D/g, '')) || 0;
                         var numB = parseInt(compB.replace(/\D/g, '')) || 0;
                         return currentSort.direction === 'asc' ? numA - numB : numB - numA;
