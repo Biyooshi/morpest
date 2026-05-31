@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMO Dashboard — MORPEST</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'joy-bg': '#2f668f',
+            'joy-accent': '#f16527',
+          },
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.5s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      /* Modern Vibrant Gradient Background */
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #312e81 100%);
+      background-attachment: fixed;
+      color: #f8fafc;
+    }
+
+    /* Glassmorphism Stat Cards */
+    .stat-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Modern Premium Chart Cards */
+    .chart-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      color: #1e293b;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-pending {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-process {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-done {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-overdue {
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .loader {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #f16527;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(1.1);
+      }
+    }
+
+    /* Scrollbar customization for tables */
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Chart text styling */
+    .google-visualization-text {
+      font-family: 'Poppins', sans-serif !important;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+  <!-- TOP HEADER -->
+  <div
+    class="backdrop-blur-md bg-gray-900/80 border-b border-gray-700/50 sticky top-0 z-50 px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="bg-gradient-to-br from-orange-400 to-red-500 p-2.5 rounded-xl shadow-lg">
+        <i class="fas fa-chart-line text-white text-lg"></i>
+      </div>
+      <div>
+        <h1
+          class="text-white font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          CMO Dashboard</h1>
+        <p class="text-orange-300 font-medium text-xs tracking-wider uppercase mt-0.5">MORPEST · Job On Yours</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <div id="liveIndicator"
+        class="flex items-center gap-2 text-xs text-green-400 font-semibold uppercase tracking-wider hidden mr-2">
+        <div class="pulse-dot bg-green-400"></div>
+        <span>Live Data</span>
+      </div>
+      <button onclick="loadDashboard()" id="refreshBtn"
+        class="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg backdrop-blur-sm">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button onclick="runAutoAssign()" id="autoAssignBtn"
+        class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-orange-500/30">
+        <i class="fas fa-magic"></i> Auto Assign
+      </button>
+      <a href="<?= scriptUrl ?>"
+        class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div id="loadingState" class="flex flex-col items-center justify-center min-h-[70vh] text-white">
+    <div class="loader mb-6"></div>
+    <p class="text-gray-300 font-medium tracking-wide animate-pulse">Mengambil data realtime...</p>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div id="dashboardContent" class="hidden p-4 md:p-6 max-w-[1600px] mx-auto space-y-6 md:space-y-8 pb-12">
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed top-20 right-4 md:right-8 z-50 hidden transition-all duration-300 transform">
+      <div id="toastInner"
+        class="px-5 py-4 rounded-xl shadow-2xl text-white text-sm flex items-center gap-3 font-semibold border border-white/20 backdrop-blur-md">
+        <i id="toastIcon" class="text-xl"></i>
+        <span id="toastMsg"></span>
+      </div>
+    </div>
+
+    <!-- STAT CARDS ROW -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
+      <div class="stat-card animate-fade-in-up" style="animation-delay: 0.0s">
+        <div class="text-gray-300 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2"><i
+            class="fas fa-inbox text-gray-400"></i> Total Request</div>
+        <div id="statTotal" class="text-white text-4xl font-extrabold mb-1">—</div>
+        <div class="text-gray-400 text-xs font-medium">Semua waktu</div>
+      </div>
+      <div class="stat-card animate-fade-in-up" style="animation-delay: 0.1s">
+        <div class="text-green-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2"><i
+            class="fas fa-check-circle"></i> Done</div>
+        <div id="statDone" class="text-green-400 text-4xl font-extrabold mb-1">—</div>
+        <div id="statDoneRate" class="text-green-400/70 text-xs font-medium">— % selesai</div>
+      </div>
+      <div class="stat-card animate-fade-in-up" style="animation-delay: 0.2s">
+        <div class="text-yellow-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2"><i
+            class="fas fa-spinner"></i> On Process</div>
+        <div id="statOnProcess" class="text-yellow-400 text-4xl font-extrabold mb-1">—</div>
+        <div class="text-yellow-400/70 text-xs font-medium">Sedang dikerjakan</div>
+      </div>
+      <div class="stat-card animate-fade-in-up" style="animation-delay: 0.3s">
+        <div class="text-orange-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2"><i
+            class="fas fa-pause-circle"></i> Pending</div>
+        <div id="statPending" class="text-orange-400 text-4xl font-extrabold mb-1">—</div>
+        <div class="text-orange-400/70 text-xs font-medium">Belum di-assign</div>
+      </div>
+      <div class="stat-card animate-fade-in-up" style="animation-delay: 0.4s">
+        <div class="text-red-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2"><i
+            class="fas fa-exclamation-circle"></i> Overdue</div>
+        <div id="statOverdue" class="text-red-400 text-4xl font-extrabold mb-1">—</div>
+        <div class="text-red-400/70 text-xs font-medium">Lewat deadline</div>
+      </div>
+      <div class="stat-card animate-fade-in-up relative overflow-hidden" style="animation-delay: 0.5s">
+        <div class="absolute -right-4 -top-4 text-blue-500/10 text-7xl"><i class="fas fa-chart-line"></i></div>
+        <div
+          class="text-blue-400 text-xs mb-2 uppercase font-bold tracking-wider flex items-center gap-2 relative z-10"><i
+            class="fas fa-percentage"></i> Done Rate</div>
+        <div id="statDoneRateBig" class="text-blue-400 text-4xl font-extrabold mb-1 relative z-10">—%</div>
+        <div class="text-blue-400/70 text-xs font-medium relative z-10">Kinerja keseluruhan</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW (TOP) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 animate-fade-in-up" style="animation-delay: 0.6s">
+
+      <!-- Chart: Request per Bulan -->
+      <div class="chart-card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+              <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><i class="fas fa-chart-bar"></i></span> Tren
+              Bulanan
+            </h2>
+            <p class="text-xs text-gray-500 font-medium mt-1">Volume request masuk per bulan</p>
+          </div>
+        </div>
+        <div id="chartByMonth" style="height:250px; width:100%;"></div>
+      </div>
+
+      <!-- Chart: Jenis Request -->
+      <div class="chart-card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+              <span class="bg-orange-100 text-orange-600 p-1.5 rounded-lg"><i class="fas fa-chart-pie"></i></span>
+              Distribusi Divisi
+            </h2>
+            <p class="text-xs text-gray-500 font-medium mt-1">Persentase jenis request (SMS/GD/CW/CC)</p>
+          </div>
+        </div>
+        <div id="chartByType" style="height:250px; width:100%;"></div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW: Grid System (1 Col PIC, 2 Col Urgent) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 animate-fade-in-up" style="animation-delay: 0.7s">
+
+      <!-- PIC PERFORMANCE CHART (Takes 1 Column) -->
+      <div class="chart-card lg:col-span-1 flex flex-col">
+        <div class="mb-4">
+          <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <span class="bg-green-100 text-green-600 p-1.5 rounded-lg"><i class="fas fa-medal"></i></span> Top 10 PIC
+          </h2>
+          <p class="text-xs text-gray-500 font-medium mt-1">Performa penyelesaian tugas</p>
+        </div>
+        <div id="chartPIC" class="flex-1 min-h-[300px] w-full"></div>
+      </div>
+
+      <!-- URGENT / OVERDUE TABLE (Takes 2 Columns) -->
+      <div class="chart-card lg:col-span-2 flex flex-col">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+              <span class="bg-red-100 text-red-600 p-1.5 rounded-lg"><i class="fas fa-exclamation-triangle"></i></span>
+              Urgent & Overdue
+            </h2>
+            <p class="text-xs text-gray-500 font-medium mt-1">Prioritas tinggi (H-1) atau melebihi deadline</p>
+          </div>
+          <span
+            class="bg-red-50 text-red-600 border border-red-100 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div> Action Needed
+          </span>
+        </div>
+
+        <div id="urgentTable" class="flex-1 w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+          <div class="flex items-center justify-center h-full min-h-[200px]">
+            <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WORKLOAD TRACKING ROW -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 animate-fade-in-up mt-6" style="animation-delay: 0.8s">
+
+      <!-- ACTIVE PIC WORKLOAD -->
+      <div class="chart-card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+              <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><i class="fas fa-users"></i></span> Active PIC
+              Workload
+            </h2>
+            <p class="text-xs text-gray-500 font-medium mt-1">Beban tugas yang sedang dikerjakan</p>
+          </div>
+        </div>
+        <div id="workloadActiveTable"
+          class="w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
+          <div class="flex items-center justify-center h-[200px]">
+            <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEGACY PIC WORKLOAD -->
+      <div class="chart-card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+              <span class="bg-gray-100 text-gray-600 p-1.5 rounded-lg"><i class="fas fa-archive"></i></span> Legacy PIC
+              Workload
+            </h2>
+            <p class="text-xs text-gray-500 font-medium mt-1">Sisa tugas PIC lama (Deactivated)</p>
+          </div>
+        </div>
+        <div id="workloadLegacyTable"
+          class="w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
+          <div class="flex items-center justify-center h-[200px]">
+            <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER INFO -->
+    <div class="text-center text-gray-400 text-xs pb-4 pt-6 font-medium">
+      <span>MORPEST v2.1 Dashboard · UI Revamp · Made by <a href="https://www.instagram.com/biyoosh.i/" target="_blank"
+          class="text-orange-400 hover:text-orange-300 transition-colors">Muhammad Nurul Qolbi</a> (CMO - JOY)</span>
+    </div>
+
+  </div>
+
+  <!-- ERROR STATE -->
+  <div id="errorState" style="display:none;" class="flex flex-col items-center justify-center min-h-[60vh] text-white">
+    <div class="bg-red-500/10 p-6 rounded-3xl border border-red-500/30 text-center backdrop-blur-md">
+      <i class="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
+      <p class="text-red-400 font-bold text-xl mb-1">Koneksi Gagal</p>
+      <p id="errorMsg" class="text-gray-300 text-sm mb-6 max-w-md mx-auto"></p>
+      <button onclick="loadDashboard()"
+        class="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-red-500/30">
+        <i class="fas fa-sync-alt mr-2"></i>Coba Lagi
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwKix3auRzg8UUSGm_bYtlGRFOnQERUbD5PWDds1t6wN_zJpXBYGmNfcNzUAN8MuNCRiA/exec";
+    var dashboardData = null;
+
+    // Load Google Charts
+    google.charts.load('current', { packages: ['corechart', 'bar'] });
+    google.charts.setOnLoadCallback(function () {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+      } else {
+        loadDashboard();
+      }
+
+      // Handle window resize for charts
+      window.addEventListener('resize', function () {
+        if (dashboardData) renderCharts(dashboardData);
+      });
+    });
+
+    function loadDashboard() {
+      showLoading();
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "getCMODashboardData", parameters: [] })
+      })
+      .then(resp => resp.json())
+      .then(data => onDataLoaded(data))
+      .catch(err => onDataError(err));
+    }
+
+    function onDataLoaded(data) {
+      if (!data || data.error) {
+        showError(data ? data.error : 'Data tidak tersedia');
+        return;
+      }
+      dashboardData = data;
+      renderStats(data.summary);
+      renderCharts(data);
+      renderUrgentTable(data.urgentItems || []);
+      renderWorkloads(data.workloads || { active: [], legacy: [] });
+      showDashboard();
+    }
+
+    function onDataError(err) {
+      showError(err.message || err.toString());
+    }
+
+    /* -------- STATS -------- */
+    function renderStats(s) {
+      document.getElementById('statTotal').textContent = s.total;
+      document.getElementById('statDone').textContent = s.done;
+      document.getElementById('statOnProcess').textContent = s.onProcess;
+      document.getElementById('statPending').textContent = s.pending;
+      document.getElementById('statOverdue').textContent = s.overdue;
+      document.getElementById('statDoneRate').textContent = s.doneRate + '% completion';
+      document.getElementById('statDoneRateBig').textContent = s.doneRate + '%';
+    }
+
+    /* -------- CHARTS -------- */
+    function renderCharts(data) {
+      renderMonthChart(data.byMonth);
+      renderTypeChart(data.byType);
+      renderPICChart(data.topPIC);
+    }
+
+    function renderMonthChart(byMonth) {
+      var container = document.getElementById('chartByMonth');
+      if (!byMonth || !byMonth.labels || byMonth.labels.length === 0) {
+        container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-400 text-sm font-medium">Belum ada data</p></div>';
+        return;
+      }
+
+      // Added annotation role to show data directly on columns
+      var tableData = [['Bulan', 'Jumlah Request', { role: 'style' }, { role: 'annotation' }]];
+      var colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#f16527', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#ec4899', '#f97316', '#14b8a6'];
+
+      for (var i = 0; i < byMonth.labels.length; i++) {
+        var label = byMonth.labels[i];
+        var parts = label.split('-');
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        var display = (parts[1] ? monthNames[parseInt(parts[1]) - 1] : label) + ' ' + (parts[0] || '');
+        var val = byMonth.values[i];
+
+        tableData.push([display, val, colors[i % colors.length], val.toString()]);
+      }
+
+      var dt = google.visualization.arrayToDataTable(tableData);
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(dt, {
+        legend: 'none',
+        chartArea: { width: '90%', height: '70%', top: 20 },
+        bar: { groupWidth: '55%' },
+        hAxis: {
+          textStyle: { fontSize: 11, color: '#64748b', fontName: 'Poppins' },
+          slantedText: true, slantedTextAngle: 30
+        },
+        vAxis: {
+          textStyle: { fontSize: 11, color: '#94a3b8', fontName: 'Poppins' },
+          gridlines: { color: '#f1f5f9', count: 4 },
+          baselineColor: '#cbd5e1',
+          minValue: 0
+        },
+        backgroundColor: 'transparent',
+        annotations: {
+          alwaysOutside: true,
+          textStyle: {
+            fontSize: 12,
+            bold: true,
+            color: '#1e293b',
+            fontName: 'Poppins'
+          }
+        },
+        tooltip: { textStyle: { fontSize: 13, fontName: 'Poppins' }, showColorCode: true }
+      });
+    }
+
+    function renderTypeChart(byType) {
+      var container = document.getElementById('chartByType');
+      var total = (byType.SMS || 0) + (byType.GD || 0) + (byType.CW || 0) + (byType.CC || 0);
+
+      if (total === 0) {
+        container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-400 text-sm font-medium">Belum ada data</p></div>';
+        return;
+      }
+
+      var tableData = [
+        ['Jenis', 'Jumlah'],
+        ['SMS (Upload)', byType.SMS || 0],
+        ['GD (Design)', byType.GD || 0],
+        ['CW (Caption)', byType.CW || 0],
+        ['CC (Video)', byType.CC || 0]
+      ];
+      var dt = google.visualization.arrayToDataTable(tableData);
+      var chart = new google.visualization.PieChart(container);
+      chart.draw(dt, {
+        pieHole: 0.4,
+        colors: ['#3b82f6', '#f16527', '#10b981', '#f59e0b'],
+        chartArea: { width: '100%', height: '80%', top: 10, bottom: 20 },
+        legend: { position: 'right', alignment: 'center', textStyle: { fontSize: 12, color: '#475569', fontName: 'Poppins' } },
+        backgroundColor: 'transparent',
+        pieSliceText: 'value', // Force show numbers directly on the pie slices
+        pieSliceTextStyle: { fontSize: 14, bold: true, fontName: 'Poppins' },
+        tooltip: { textStyle: { fontSize: 13, fontName: 'Poppins' } }
+      });
+    }
+
+    function renderPICChart(topPIC) {
+      var container = document.getElementById('chartPIC');
+      if (!topPIC || topPIC.length === 0) {
+        container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-400 text-sm font-medium">Belum ada data PIC</p></div>';
+        return;
+      }
+
+      // Use BarChart (horizontal) for better fit in 1 column
+      var tableData = [['PIC', 'Done', { role: 'annotation' }, 'Not Done', { role: 'annotation' }]];
+
+      for (var i = 0; i < topPIC.length; i++) {
+        var p = topPIC[i];
+        var notDone = p.total - p.done;
+        // Only show annotation if value > 0 to avoid clutter
+        var doneAnn = p.done > 0 ? p.done.toString() : '';
+        var notDoneAnn = notDone > 0 ? notDone.toString() : '';
+
+        // Truncate name if too long for side panel
+        var shortName = p.name.split(' ')[0];
+        tableData.push([shortName, p.done, doneAnn, notDone, notDoneAnn]);
+      }
+
+      var dt = google.visualization.arrayToDataTable(tableData);
+      var chart = new google.visualization.BarChart(container);
+
+      // Calculate dynamic height based on number of PICs to prevent squishing
+      var chartHeight = Math.max(300, topPIC.length * 40 + 50);
+      container.style.height = chartHeight + 'px';
+
+      chart.draw(dt, {
+        isStacked: true,
+        colors: ['#10b981', '#e2e8f0'],
+        chartArea: { width: '65%', height: '80%', left: 80, top: 10, bottom: 40 },
+        hAxis: {
+          textPosition: 'none', // Hide X axis text for cleaner look
+          gridlines: { color: 'transparent' },
+          baselineColor: 'transparent',
+          minValue: 0
+        },
+        vAxis: {
+          textStyle: { fontSize: 11, color: '#334155', fontName: 'Poppins', bold: true }
+        },
+        legend: { position: 'bottom', textStyle: { fontSize: 10, color: '#64748b', fontName: 'Poppins' } },
+        backgroundColor: 'transparent',
+        bar: { groupWidth: '60%' },
+        annotations: {
+          alwaysOutside: false,
+          textStyle: { fontSize: 11, fontName: 'Poppins', bold: true, color: '#1e293b' }
+        },
+        tooltip: { textStyle: { fontSize: 13, fontName: 'Poppins' } }
+      });
+    }
+
+    /* -------- URGENT TABLE -------- */
+    function renderUrgentTable(items) {
+      var el = document.getElementById('urgentTable');
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div class="flex flex-col items-center justify-center h-full min-h-[250px] bg-white"><div class="bg-green-50 p-4 rounded-full mb-3"><i class="fas fa-check text-green-500 text-3xl"></i></div><p class="text-green-600 font-bold">Semua Aman!</p><p class="text-gray-500 text-sm mt-1">Tidak ada request urgent atau overdue</p></div>';
+        return;
+      }
+
+      var html = '<div class="overflow-x-auto custom-scrollbar h-full max-h-[400px]"><table class="w-full text-sm text-left border-collapse bg-white">';
+      html += '<thead class="bg-slate-50 sticky top-0 z-10 shadow-sm"><tr class="text-slate-500 text-xs uppercase tracking-wider">';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200">ID</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200 min-w-[180px]">Judul</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200 hidden md:table-cell">PIC</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200">Deadline</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200 text-center">Status</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200 text-center">Alert</th>';
+      html += '</tr></thead><tbody class="divide-y divide-slate-100">';
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var isOverdue = item.diffDays < 0;
+        var rowBg = isOverdue ? 'bg-red-50/40 hover:bg-red-50' : 'hover:bg-slate-50';
+
+        var countdown, cdBadgeClass;
+        if (isOverdue) {
+          countdown = 'Terlewat ' + Math.abs(item.diffDays) + ' hr';
+          cdBadgeClass = 'bg-red-100 text-red-700 border-red-200';
+        } else if (item.diffDays === 0) {
+          countdown = 'HARI INI!';
+          cdBadgeClass = 'bg-orange-100 text-orange-700 border-orange-200 animate-pulse';
+        } else {
+          countdown = 'H-' + item.diffDays;
+          cdBadgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        }
+
+        var statusBadge = item.status === 'On Process'
+          ? '<span class="badge badge-process shadow-sm">On Process</span>'
+          : '<span class="badge badge-pending shadow-sm">Pending</span>';
+
+        html += '<tr class="' + rowBg + ' transition-colors">';
+        html += '<td class="px-4 py-3 font-mono font-bold text-blue-600 text-xs whitespace-nowrap">' + esc(item.id) + '</td>';
+        html += '<td class="px-4 py-3 font-medium text-slate-800">' + esc(item.judul) + ' <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 md:hidden">' + esc(item.picName) + '</div></td>';
+        html += '<td class="px-4 py-3 text-slate-600 text-xs font-semibold hidden md:table-cell">' + esc(item.picName) + '</td>';
+        html += '<td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">' + esc(item.deadline) + '</td>';
+        html += '<td class="px-4 py-3 text-center">' + statusBadge + '</td>';
+        html += '<td class="px-4 py-3 text-center"><span class="border text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md whitespace-nowrap shadow-sm ' + cdBadgeClass + '">' + countdown + '</span></td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      el.innerHTML = html;
+    }
+
+    /* -------- WORKLOADS -------- */
+    function renderWorkloads(workloads) {
+      renderWorkloadTable('workloadActiveTable', workloads.active, 'Active');
+      renderWorkloadTable('workloadLegacyTable', workloads.legacy, 'Legacy');
+    }
+
+    function renderWorkloadTable(elementId, items, type) {
+      var el = document.getElementById(elementId);
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div class="flex flex-col items-center justify-center h-full min-h-[200px] bg-white"><p class="text-gray-400 text-sm font-medium">Belum ada data workload</p></div>';
+        return;
+      }
+
+      var html = '<table class="w-full text-sm text-left border-collapse bg-white">';
+      html += '<thead class="bg-slate-50 sticky top-0 z-10 shadow-sm"><tr class="text-slate-500 text-[10px] uppercase tracking-wider">';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200">Nama PIC</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200 text-center">Jml Task (Aktif)</th>';
+      html += '<th class="px-4 py-3 font-bold border-b border-slate-200">Ticket ID (Aktif)</th>';
+      html += '</tr></thead><tbody class="divide-y divide-slate-100">';
+
+      var hasData = false;
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (type === 'Legacy' && item.activeCount === 0) continue; // Hide legacy PICs with no active tasks
+        hasData = true;
+
+        var badgeClass = item.activeCount > 2 ? 'bg-red-100 text-red-700' : (item.activeCount > 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700');
+
+        var ticketsHtml = '';
+        if (item.activeTickets && item.activeTickets.length > 0) {
+          for (var t = 0; t < item.activeTickets.length; t++) {
+            ticketsHtml += '<span class="inline-block bg-blue-50 text-blue-600 border border-blue-100 text-[10px] px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">' + item.activeTickets[t] + '</span>';
+          }
+        } else {
+          ticketsHtml = '<span class="text-gray-400 italic text-[10px]">Kosong</span>';
+        }
+
+        html += '<tr class="hover:bg-slate-50 transition-colors">';
+        html += '<td class="px-4 py-3 font-medium text-slate-800 text-xs">' + esc(item.name) + '</td>';
+        html += '<td class="px-4 py-3 text-center"><span class="font-bold px-2 py-0.5 rounded ' + badgeClass + '">' + item.activeCount + '</span></td>';
+        html += '<td class="px-4 py-3 max-w-[150px]">' + ticketsHtml + '</td>';
+        html += '</tr>';
+      }
+
+      html += '</tbody></table>';
+
+      // If legacy and all hidden
+      if (!hasData && type === 'Legacy') {
+        html = '<div class="flex flex-col items-center justify-center h-full min-h-[200px] bg-white"><div class="bg-green-50 p-4 rounded-full mb-3"><i class="fas fa-check text-green-500 text-2xl"></i></div><p class="text-green-600 font-bold text-sm">Clear!</p><p class="text-gray-500 text-xs mt-1">Semua PIC legacy sudah menyelesaikan tugas</p></div>';
+      }
+
+      el.innerHTML = html;
+    }
+
+    /* -------- AUTO ASSIGN -------- */
+    function runAutoAssign() {
+      var btn = document.getElementById('autoAssignBtn');
+      var originalContent = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></div> Assigning...';
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "autoAssignAllPending", parameters: [] })
+      })
+      .then(resp => resp.json())
+      .then(result => {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        showToast(result.message || 'Auto assign selesai!', 'success');
+        setTimeout(loadDashboard, 1500);
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        showToast('Error: ' + (err.message || err), 'error');
+      });
+    }
+
+    /* -------- UTILS -------- */
+    function esc(t) {
+      if (!t) return '-';
+      return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function showToast(msg, type) {
+      var inner = document.getElementById('toastInner');
+      var icon = document.getElementById('toastIcon');
+      var msgEl = document.getElementById('toastMsg');
+      var toast = document.getElementById('toast');
+
+      if (type === 'success') {
+        inner.className = 'px-5 py-4 rounded-xl shadow-2xl text-white text-sm flex items-center gap-3 font-semibold border border-green-400/30 bg-green-500/90 backdrop-blur-md';
+        icon.className = 'fas fa-check-circle text-green-100';
+      } else {
+        inner.className = 'px-5 py-4 rounded-xl shadow-2xl text-white text-sm flex items-center gap-3 font-semibold border border-red-400/30 bg-red-500/90 backdrop-blur-md';
+        icon.className = 'fas fa-exclamation-triangle text-red-100';
+      }
+      msgEl.textContent = msg;
+
+      toast.classList.remove('hidden');
+      // Adding simple pop animation classes (requires Tailwind to compute, so using standard toggle)
+      toast.classList.add('scale-100', 'opacity-100');
+
+      setTimeout(function () {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+
+    function showLoading() {
+      document.getElementById('loadingState').style.display = 'flex';
+      document.getElementById('dashboardContent').style.display = 'none';
+      document.getElementById('errorState').style.display = 'none';
+    }
+
+    function showDashboard() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('dashboardContent').style.display = 'block';
+      document.getElementById('errorState').style.display = 'none';
+      document.getElementById('liveIndicator').style.display = 'flex';
+    }
+
+    function showError(msg) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('dashboardContent').style.display = 'none';
+      document.getElementById('errorState').style.display = 'flex';
+      document.getElementById('errorMsg').textContent = msg;
+    }
+  </script>
+
+</body>
+
+</html>

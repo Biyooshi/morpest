@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'joy-bg': '#2f668f',
+            'joy-accent': '#f16527',
+            'joy-hover': '#df6631',
+            'joy-light': '#f0f9ff',
+          },
+          fontFamily: { sans: ['Poppins', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #2f668f;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 3px solid #f16527;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* Styling untuk status baru */
+    .badge-pending {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Merah muda */
+    .badge-process {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* Kuning/Oranye */
+    .badge-done {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Hijau */
+
+    /* Menggunakan Tailwind untuk card lebih aman, css custom minimalis */
+    select {
+      appearance: menulist !important;
+      -webkit-appearance: menulist !important;
+      -moz-appearance: menulist !important;
+    }
+
+    /* Admin container - ensure proper spacing */
+    #adminContainer {
+      display: block !important;
+    }
+
+    /* Admin card wrappers - ensure proper spacing and separation */
+    /* CRITICAL: Gunakan selector yang sangat spesifik untuk memastikan SEMUA card mendapat spacing */
+    /* Multiple selectors untuk memastikan tidak ada card yang terlewat */
+    #adminContainer>.admin-card-wrapper,
+    #adminContainer .admin-card-wrapper,
+    .admin-card-wrapper {
+      margin-bottom: 3rem !important;
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      display: block !important;
+      width: 100% !important;
+      clear: both !important;
+      min-height: 1px !important;
+      position: relative !important;
+      box-sizing: border-box !important;
+      float: none !important;
+      flex: none !important;
+      grid-column: auto !important;
+    }
+
+    /* Ensure card inside wrapper doesn't override spacing - CRITICAL */
+    #adminContainer .admin-card-wrapper>.bg-white,
+    .admin-card-wrapper>.bg-white,
+    .admin-card-wrapper .bg-white {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding: 1rem !important;
+      float: none !important;
+      position: relative !important;
+    }
+
+    /* Remove any negative margins or positioning that might cause overlap */
+    .admin-card-wrapper * {
+      margin-top: 0 !important;
+    }
+
+    /* CRITICAL: Pastikan tidak ada wrapper yang memiliki margin negatif */
+    #adminContainer .admin-card-wrapper[style*="margin"] {
+      margin-bottom: 3rem !important;
+      margin-top: 0 !important;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center py-10 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full relative min-h-[600px]">
+
+    <div class="h-3 bg-orange-500 w-full rounded-t-2xl"></div>
+
+    <div class="flex border-b border-gray-200" id="mainNav">
+      <button type="button" onclick="showView('request')" id="navRequest"
+        class="flex-1 py-4 text-center border-b-2 border-orange-500 text-blue-800 font-semibold">
+        <i class="fas fa-plus-circle mr-2"></i>Request Form
+      </button>
+      <button type="button" onclick="showView('tracking')" id="navTracking"
+        class="flex-1 py-4 text-center text-gray-500">
+        <i class="fas fa-search mr-2"></i>Request Status Checker
+      </button>
+    </div>
+
+    <div id="adminHeader" class="hidden bg-gray-800 text-white p-4 -mx-8 -mt-6 mb-6 rounded-t-lg">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+          <div class="bg-orange-500 p-2 rounded">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-lg">Morpest Admin Dashboard</h2>
+            <p class="text-xs text-gray-400">Tools unuk manage semua data marketing request</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="refreshAdminData()"
+            class="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded flex items-center gap-2">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+          <button onclick="logoutAdmin()"
+            class="text-sm bg-red-500 hover:bg-red-600 px-3 py-1 rounded flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER SECTION -->
+      <div
+        class="bg-gray-700 p-3 rounded-lg flex flex-col md:flex-row gap-4 items-center border-t border-gray-600 pt-4">
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <label class="text-sm font-bold text-gray-300 min-w-max"><i class="fas fa-filter mr-1"></i>Filter
+            Status:</label>
+          <select id="adminStatusFilter" onchange="applyAdminFilters()"
+            class="text-black text-sm p-2 rounded w-full md:w-40 border-none focus:ring-2 focus:ring-orange-500">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="on process">On Process</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <label class="text-sm font-bold text-gray-300 min-w-max"><i class="far fa-calendar-alt mr-1"></i>Filter
+            Bulan:</label>
+          <select id="adminMonthFilter" onchange="applyAdminFilters()"
+            class="text-black text-sm p-2 rounded w-full md:w-48 border-none focus:ring-2 focus:ring-orange-500">
+            <option value="all">All Months</option>
+            <!-- Options populated by JS -->
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 md:p-8">
+
+      <div id="viewRequest">
+        <div class="mb-6 text-center">
+          <h1 class="text-2xl font-bold text-blue-800 uppercase">Job On Yours - Marketing Request Portal</h1>
+          <p class="text-gray-500 text-sm mt-2">Isi form request dibawah ini untuk mengajukan permintaan kepada Tim
+            Marketing Job On Yours</p>
+        </div>
+
+        <form id="mainForm" onsubmit="submitForm(event)">
+          <div class="mb-6 border-b pb-4">
+            <h3 class="text-orange-500 font-bold mb-3">1. Identitas</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" name="reqName" required placeholder="Nama Lengkap"
+                class="border p-3 rounded-lg w-full">
+              <input type="text" name="reqNickname" required placeholder="Nama Panggilan"
+                class="border p-3 rounded-lg w-full">
+              <input type="text" name="reqContact" required placeholder="wa.me/6281234567890"
+                class="border p-3 rounded-lg w-full">
+              <select name="reqPosition" required class="border p-3 rounded-lg w-full">
+                <option value="" disabled selected>- Posisi -</option>
+                <option value="Founder">Founder</option>
+                <option value="Co-Founder">Co-Founder</option>
+                <option value="CBO">CBO</option>
+                <option value="CHRO">CHRO</option>
+                <option value="CMO">CMO</option>
+                <option value="Secretary">Secretary</option>
+                <option value="CBO-Partnership">CBO-Partnership</option>
+                <option value="CBO-Project">CBO-Project</option>
+                <option value="CBO-Business Development">CBO-Business Development</option>
+                <option value="CHRO-Talent Acquisition">CHRO-Talent Acquisition</option>
+                <option value="CHRO-People Development">CHRO-People Development</option>
+                <option value="CMO-CC">CMO-CC</option>
+                <option value="CMO-GD">CMO-GD</option>
+                <option value="CMO-CW">CMO-CW</option>
+                <option value="CMO-SMS">CMO-SMS</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-orange-500 font-bold mb-3">2. Detail Request</h3>
+            <div class="space-y-4">
+              <input type="text" name="reqTitle" required placeholder="Judul Request ditulis singkat saja"
+                class="border p-3 rounded-lg w-full">
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <select name="reqPriority" required class="border p-3 rounded-lg w-full">
+                    <option value="" disabled selected>Pilih tingkat urgensi requestmu</option>
+                    <option value="Low Priority (H-7+)">Low Priority (H-7+)</option>
+                    <option value="Medium Priority (H-3)">Medium Priority (H-3)</option>
+                    <option value="High Priority / Urgent (H-1)">High Priority / Urgent (H-1)</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1 italic">Catatan: Request dengan prioritas Urgent (H-1) wajib
+                    meminta persetujuan terlebih dahulu kepada Head/Co-Head terkait.</p>
+                </div>
+                <input type="date" name="reqDeadline" required class="border p-3 rounded-lg w-full">
+              </div>
+
+              <input type="url" name="reqLink" placeholder="Link Referensi (Opsional)"
+                class="border p-3 rounded-lg w-full">
+
+              <select id="requestType" name="requestType" required
+                class="border-2 border-blue-800 p-3 rounded-lg w-full bg-blue-50 font-medium">
+                <option value="" disabled selected>-- Pilih Jenis Request --</option>
+                <option value="A. Request upload konten ke SMS">A. Request upload konten ke SMS</option>
+                <option value="B. Request Design ke GD">B. Request Design ke GD</option>
+                <option value="C. Request Penulisan Caption/Brief Content ke CW">C. Request Penulisan Caption/Brief
+                  Content ke CW</option>
+                <option value="D. Request buat konten video ke CC" disabled>D. Request buat konten video ke CC
+                  (Deactivated)</option>
+              </select>
+
+              <div id="dynamicContainer" class="bg-gray-50 p-4 rounded-lg border hidden">
+
+
+                <div id="sectionSMS" class="hidden space-y-3">
+                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Upload untuk SMS</h4>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Platform Tujuan</label>
+                    <select name="smsPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                      <option value="Instagram Feeds">Instagram Feeds</option>
+                      <option value="Instagram Reels">Instagram Reels</option>
+                      <option value="Instagram Story">Instagram Story</option>
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="TikTok">TikTok</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
+                    <textarea name="smsArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      placeholder="Jelaskan Arahan Request Uploadmu Disini..."></textarea>
+                  </div>
+                </div>
+
+                <div id="sectionGD" class="hidden space-y-3">
+                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Request Design ke GD</h4>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Format Design</label>
+                    <select name="gdFormat" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                      <option value="Square (4:5)">Square (4:5)</option>
+                      <option value="Potrait (9:16)">Potrait (9:16)</option>
+                      <option value="Landscape (16:9)">Landscape (16:9)</option>
+                      <option value="Custom">Custom</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
+                    <textarea name="gdArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      placeholder="Jelaskan Arahan Request Designmu Disini..."></textarea>
+                  </div>
+                </div>
+
+                <div id="sectionCW" class="hidden space-y-3">
+                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Caption/Brief untuk CW</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs text-gray-500 font-bold uppercase">Tone of Voice</label>
+                      <select name="cwTone" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                        <option value="Informatif">Informatif</option>
+                        <option value="Casual">Casual</option>
+                        <option value="Dramatis">Dramatis</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-500 font-bold uppercase">Target Audience</label>
+                      <input name="cwAudience" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                        placeholder="Contoh: Mahasiswa">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
+                    <textarea name="cwArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      placeholder="Jelaskan Arahan Request Caption/Briefmu Disini..."></textarea>
+                  </div>
+                </div>
+
+                <div id="sectionCC" class="hidden space-y-3">
+                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Konten Video untuk CC</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs text-gray-500 font-bold uppercase">Platform</label>
+                      <select name="ccPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                        <option value="Instagram Reels">Instagram Reels</option>
+                        <option value="TikTok">TikTok</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-500 font-bold uppercase">Estimasi Durasi</label>
+                      <input name="ccDuration" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                        placeholder="Contoh: 30 Detik">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
+                    <textarea name="ccArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      placeholder="Jelaskan Arahan Request videomu Disini..."></textarea>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn"
+            class="w-full py-3 px-6 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-all transform hover:-translate-y-1">
+            <i class="fas fa-paper-plane mr-2"></i>Kirim Request
+          </button>
+        </form>
+      </div>
+
+      <div id="viewSuccess" class="hidden text-center py-8">
+        <div class="text-5xl text-green-500 mb-4">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2 class="text-xl font-bold text-blue-800">Request Berhasil!</h2>
+        <div class="bg-gray-100 p-4 rounded-lg my-6 max-w-sm mx-auto">
+          <p class="text-sm text-gray-500">Ticket ID Anda</p>
+          <p id="successTicket" class="text-2xl font-mono font-bold text-blue-800">MKT-XXXX</p>
+        </div>
+        <div class="flex gap-2 justify-center">
+          <a id="btnCalendar" href="#" target="_blank"
+            class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors">
+            <i class="fas fa-calendar-plus mr-1"></i> Calendar
+          </a>
+          <button onclick="showView('request')"
+            class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            Buat Baru
+          </button>
+        </div>
+      </div>
+
+      <div id="viewTracking" class="hidden">
+        <div class="max-w-md mx-auto">
+          <h2 class="text-center font-bold text-blue-800 mb-4">
+            <i class="fas fa-search mr-2"></i>Cek Status Request
+          </h2>
+          <div class="flex gap-2 mb-6">
+            <input type="text" id="trackId" placeholder="MKT-XXXX"
+              class="flex-1 border p-3 rounded-lg text-center uppercase font-mono">
+            <button onclick="trackTicket()" class="bg-blue-800 text-white px-5 rounded-lg hover:bg-blue-900">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <div id="trackResult" class="hidden border rounded-xl p-5 bg-gray-50">
+            <div class="flex justify-between items-start mb-1">
+              <span id="resultId" class="font-mono font-bold text-blue-800"></span>
+              <span id="resultStatus" class="badge"></span>
+            </div>
+
+
+            <div class="text-[10px] font-bold text-orange-500 mb-2 uppercase tracking-wide" id="resultJenis"></div>
+            <div class="text-[10px] text-gray-500 mb-3 uppercase tracking-wide" id="resultTujuan"></div>
+
+            <h3 id="resultTitle" class="font-bold text-gray-800 mb-2 text-lg leading-snug"></h3>
+
+            <div class="text-sm text-gray-600 grid grid-cols-2 gap-2 mb-4 border-t border-gray-200 pt-2">
+              <div>
+                <span class="block text-xs text-gray-400">PIC</span>
+                <span id="resultPIC" class="font-medium"></span>
+              </div>
+              <div>
+                <span class="block text-xs text-gray-400">Deadline</span>
+                <span id="resultDeadline" class="font-medium"></span>
+              </div>
+            </div>
+
+            <div id="boxResultLink" class="hidden bg-green-50 p-3 rounded border border-green-200 text-center">
+              <a id="resLink" href="#" target="_blank" class="text-green-700 font-bold text-sm hover:underline">
+                <i class="fas fa-download mr-1"></i> Download Hasil
+              </a>
+            </div>
+          </div>
+
+          <div id="trackError" class="hidden text-center text-red-500 text-sm mt-4"></div>
+        </div>
+      </div>
+
+      <div id="adminDashboard" class="hidden">
+        <div id="adminContainer" class="max-h-[600px] overflow-y-auto pr-2" style="display: block;">
+          <div class="text-center py-10 text-gray-400">
+            <div class="loader inline-block mb-2"></div>
+            <p>Loading admin data...</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bg-gray-50 p-3 text-center border-t text-xs text-gray-500 rounded-b-2xl">
+      <div class="flex justify-between items-center px-4">
+        <a href="https://www.instagram.com/biyoosh.i/" target="_blank" class="text-gray-500 hover:underline">
+          <span>Made by Muhammad Nurul Qolbi (CMO - JOY)</span>
+        </a>
+        <div class="flex gap-4">
+          <!-- Icon Admin -->
+          <button onclick="showAdmin()" class="text-blue-800 hover:underline">
+            <i class="fas fa-lock mr-1"></i>Admin
+          </button>
+          <button onclick="window.location.href='<?= scriptUrl ?>?page=dashboard'"
+            class="text-blue-800 hover:underline">
+            <i class="fas fa-chart-bar mr-1"></i>Dashboard
+          </button>
+          <button onclick="window.location.href='<?= scriptUrl ?>?page=list'" class="text-blue-800 hover:underline">
+            <i class="fas fa-list mr-1"></i>Request List
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwKix3auRzg8UUSGm_bYtlGRFOnQERUbD5PWDds1t6wN_zJpXBYGmNfcNzUAN8MuNCRiA/exec";
+    // Global variables
+    var picData = {};
+    var allAdminData = []; // Store raw admin data for filtering
+    var currentView = 'request';
+
+    // Simple view management
+    function showView(viewName) {
+      // Hide all views
+      document.getElementById('viewRequest').classList.add('hidden');
+      document.getElementById('viewSuccess').classList.add('hidden');
+      document.getElementById('viewTracking').classList.add('hidden');
+      document.getElementById('adminHeader').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('mainNav').classList.remove('hidden');
+
+      // Show selected view
+      if (viewName === 'request') {
+        document.getElementById('viewRequest').classList.remove('hidden');
+        currentView = 'request';
+      } else if (viewName === 'success') {
+        document.getElementById('viewSuccess').classList.remove('hidden');
+        currentView = 'success';
+      } else if (viewName === 'tracking') {
+        document.getElementById('viewTracking').classList.remove('hidden');
+        currentView = 'tracking';
+      } else if (viewName === 'admin') {
+        document.getElementById('adminHeader').classList.remove('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        document.getElementById('mainNav').classList.add('hidden');
+        currentView = 'admin';
+      }
+
+      // Update nav buttons
+      updateNavButtons(viewName);
+    }
+
+    function updateNavButtons(activeView) {
+      var navButtons = document.querySelectorAll('#mainNav button');
+      for (var i = 0; i < navButtons.length; i++) {
+        navButtons[i].classList.remove('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
+        navButtons[i].classList.add('text-gray-500');
+      }
+
+      var navRequest = document.getElementById('navRequest');
+      var navTracking = document.getElementById('navTracking');
+
+      if (activeView === 'request' && navRequest) {
+        navRequest.classList.add('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
+        navRequest.classList.remove('text-gray-500');
+      } else if (activeView === 'tracking' && navTracking) {
+        navTracking.classList.add('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
+        navTracking.classList.remove('text-gray-500');
+      }
+    }
+
+    // Dynamic sections for request type
+    function showDynamicSection() {
+      var typeSelect = document.getElementById('requestType');
+      var type = typeSelect ? typeSelect.value : '';
+      var container = document.getElementById('dynamicContainer');
+      var sections = ['sectionSMS', 'sectionGD', 'sectionCW', 'sectionCC'];
+
+      // Hide all sections first
+      for (var i = 0; i < sections.length; i++) {
+        var sectionEl = document.getElementById(sections[i]);
+        if (sectionEl) sectionEl.classList.add('hidden');
+      }
+
+      // Show container and relevant section
+      if (type && type !== '') {
+        if (container) container.classList.remove('hidden');
+        if (type.indexOf('upload konten') >= 0 || type.indexOf('A.') === 0) {
+          var sms = document.getElementById('sectionSMS');
+          if (sms) sms.classList.remove('hidden');
+        } else if (type.indexOf('Request Design') >= 0 || type.indexOf('B.') === 0) {
+          var gd = document.getElementById('sectionGD');
+          if (gd) gd.classList.remove('hidden');
+        } else if (type.indexOf('Penulisan Caption') >= 0 || type.indexOf('C.') === 0) {
+          var cw = document.getElementById('sectionCW');
+          if (cw) cw.classList.remove('hidden');
+        } else if (type.indexOf('konten video') >= 0 || type.indexOf('D.') === 0) {
+          var cc = document.getElementById('sectionCC');
+          if (cc) cc.classList.remove('hidden');
+        }
+      } else {
+        if (container) container.classList.add('hidden');
+      }
+    }
+
+    // Form submission
+    function submitForm(event) {
+      event.preventDefault();
+      var btn = document.getElementById('submitBtn');
+      var originalText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader inline-block mr-2"></div> Mengirim...';
+
+      // Collect form data
+      var formData = {};
+      var formElements = event.target.elements;
+      for (var i = 0; i < formElements.length; i++) {
+        var element = formElements[i];
+        if (element.name) {
+          formData[element.name] = element.value;
+        }
+      }
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "processForm", parameters: [formData] })
+      })
+      .then(resp => resp.json())
+      .then(data => handleFormSuccess(data))
+      .catch(err => handleFormError(err));
+    }
+
+    function handleFormSuccess(response) {
+      var btn = document.getElementById('submitBtn');
+
+      if (response.status === 'success') {
+        document.getElementById('successTicket').textContent = response.ticketId;
+        document.getElementById('btnCalendar').href = response.calendarLink;
+        showView('success');
+        document.getElementById('mainForm').reset();
+        document.getElementById('dynamicContainer').classList.add('hidden');
+      } else {
+        alert('Error: ' + response.message);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Request';
+    }
+
+    function handleFormError(error) {
+      var btn = document.getElementById('submitBtn');
+      alert('Terjadi error: ' + error.message);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Request';
+    }
+
+    // Tracking function
+    function trackTicket() {
+      var ticketId = document.getElementById('trackId').value.trim();
+      if (!ticketId) {
+        alert('Masukkan Ticket ID!');
+        return;
+      }
+
+      document.getElementById('trackResult').classList.add('hidden');
+      document.getElementById('trackError').classList.add('hidden');
+      document.getElementById('boxResultLink').classList.add('hidden');
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "checkRequestStatus", parameters: [ticketId] })
+      })
+      .then(resp => resp.json())
+      .then(data => handleTrackSuccess(data))
+      .catch(err => handleTrackError(err));
+    }
+
+    function handleTrackSuccess(response) {
+      if (response.found) {
+        document.getElementById('resultId').textContent = response.ticketId;
+        document.getElementById('resultTitle').textContent = response.judul;
+        document.getElementById('resultPIC').textContent = response.pic;
+        document.getElementById('resultDeadline').textContent = response.deadline;
+        document.getElementById('resultJenis').textContent = response.jenis;
+
+        // ADDED: Requester Info
+        var requesterInfo = (response.requester || '-') + ' (' + (response.reqContact || '-') + ')';
+        // Create or update element if not exists (usually not in original HTML so we append/prepend)
+        // Since structure is fixed, let's inject it into DOM if possible or assume a placeholder.
+        // Wait, the user wants me to ADD it. The HTML structure for result might need an update.
+        // Let's look at the View first.
+
+        // Actually, let's look at where to put it. 
+        // Current HTML for trackResult has: ID/Status row -> Jenis -> Tujuan -> Title -> PIC/Deadline row.
+        // I will insert a new row for Requester above PIC/Deadline.
+
+        var requesterContainer = document.getElementById('resultRequesterContainer');
+        if (!requesterContainer) {
+          // If container doesn't exist, Create it dynamically after Title
+          var titleEl = document.getElementById('resultTitle');
+          requesterContainer = document.createElement('div');
+          requesterContainer.id = 'resultRequesterContainer';
+          requesterContainer.className = 'text-xs text-gray-600 mb-2 border-t border-gray-200 pt-2';
+          var label = document.createElement('span');
+          label.className = 'block text-xs text-gray-400';
+          label.textContent = 'Requester';
+          var value = document.createElement('span');
+          value.id = 'resultRequesterValue';
+          value.className = 'font-medium';
+          requesterContainer.appendChild(label);
+          requesterContainer.appendChild(value);
+
+          titleEl.parentNode.insertBefore(requesterContainer, titleEl.nextSibling);
+        }
+        document.getElementById('resultRequesterValue').textContent = requesterInfo;
+
+        var tujuanText = "";
+        if (response.jenis.indexOf("SMS") >= 0) {
+          tujuanText = "Ditujukan kepada: Social Media Specialist";
+        } else if (response.jenis.indexOf("GD") >= 0) {
+          tujuanText = "Ditujukan kepada: Graphic Designer";
+        } else if (response.jenis.indexOf("CW") >= 0) {
+          tujuanText = "Ditujukan kepada: Content Writer";
+        } else if (response.jenis.indexOf("CC") >= 0) {
+          tujuanText = "Ditujukan kepada: Content Creator";
+        }
+        document.getElementById('resultTujuan').textContent = tujuanText;
+
+        var statusBadge = document.getElementById('resultStatus');
+        statusBadge.textContent = response.status;
+
+        // Logic Warna Badge sesuai status otomatis
+        var badgeClass = 'badge-pending';
+        if (response.status === 'Done') badgeClass = 'badge-done';
+        else if (response.status === 'On Process') badgeClass = 'badge-process';
+
+        statusBadge.className = 'badge ' + badgeClass;
+
+        // Tampilkan link hasil jika status DONE dan ada link
+        if (response.status === 'Done' && response.linkResult) {
+          document.getElementById('boxResultLink').classList.remove('hidden');
+          document.getElementById('resLink').href = response.linkResult;
+        }
+
+        document.getElementById('trackResult').classList.remove('hidden');
+      } else {
+        document.getElementById('trackError').textContent = response.message || 'Ticket tidak ditemukan';
+        document.getElementById('trackError').classList.remove('hidden');
+      }
+    }
+
+    function handleTrackError(error) {
+      document.getElementById('trackError').textContent = 'Error: ' + error.message;
+      document.getElementById('trackError').classList.remove('hidden');
+    }
+
+    // ==================== ADMIN FUNCTIONS ====================
+    function showAdmin() {
+      var password = prompt('Masukkan PIN Admin:');
+      if (password === '1234') {
+        loadPICData();
+      } else if (password !== null && password !== '') {
+        alert('PIN salah!');
+      }
+    }
+
+    function loadPICData() {
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "getPICData", parameters: [] })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        picData = data || {};
+        enterAdminMode();
+      })
+      .catch(error => {
+        alert('Error loading PIC data: ' + (error.message || error));
+      });
+    }
+
+    function enterAdminMode() {
+      showView('admin');
+      refreshAdminData();
+    }
+
+    function logoutAdmin() {
+      showView('request');
+    }
+
+    function refreshAdminData() {
+      document.getElementById('adminContainer').innerHTML = `
+          <div class="text-center py-8">
+            <div class="loader inline-block mb-2"></div>
+            <p class="text-gray-500">Loading data...</p>
+          </div>
+        `;
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "getAdminData", parameters: [] })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        renderAdminData(data.data || data);
+      })
+      .catch(error => {
+          document.getElementById('adminContainer').innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <p>Error loading data: ${error.message}</p>
+                <button onclick="refreshAdminData()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Retry</button>
+              </div>
+            `;
+      });
+    }
+
+    function renderAdminData(data) {
+      // 1. Store data globally
+      allAdminData = data || [];
+
+      // 2. Populate filters if needed (check if month filter is empty)
+      var monthSelect = document.getElementById('adminMonthFilter');
+      if (monthSelect && monthSelect.options.length <= 1) { // Only "All Months" exists
+        populateAdminMonthFilter();
+      }
+
+      // 3. Apply filters which will call renderAdminCards
+      applyAdminFilters();
+    }
+
+    function populateAdminMonthFilter() {
+      var monthSelect = document.getElementById('adminMonthFilter');
+      if (!monthSelect) return;
+
+      var start = new Date(Date.UTC(2025, 10, 1)); // Nov 2025 like in list.html
+      var optionsHtml = '<option value="all">All Months</option>';
+
+      for (var i = 0; i < 14; i++) {
+        var d = new Date(start);
+        d.setUTCMonth(start.getUTCMonth() + i);
+        var year = d.getUTCFullYear();
+        var month = String(d.getUTCMonth() + 1);
+        if (month.length === 1) month = '0' + month;
+        var value = year + '-' + month;
+        var label = d.toLocaleString('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+        optionsHtml += '<option value="' + value + '">' + label + '</option>';
+      }
+
+      monthSelect.innerHTML = optionsHtml;
+    }
+
+    function applyAdminFilters() {
+      var statusFilterEl = document.getElementById('adminStatusFilter');
+      var monthFilterEl = document.getElementById('adminMonthFilter');
+      var statusFilter = (statusFilterEl && statusFilterEl.value ? statusFilterEl.value : 'all').toLowerCase();
+      var monthFilter = (monthFilterEl && monthFilterEl.value ? monthFilterEl.value : 'all');
+
+      var filteredData = [];
+      for (var i = 0; i < allAdminData.length; i++) {
+        var item = allAdminData[i];
+
+        // Filter Status
+        var statusValue = (item.status || 'Pending').toLowerCase();
+        if (statusFilter !== 'all' && statusValue !== statusFilter) continue;
+
+        // Filter Month (Based on submittedAt timestamp if available or parse date?)
+        // item.submittedAt is formatted string "dd MMM yyyy, HH:mm"
+        // Better to use raw date from properties if available? 
+        // The getAdminData in Code.gs sends formatted strings.
+        // Let's parse the string relative to Month filter.
+        // submittedAt format: "dd MMM yyyy, HH:mm" (e.g. "20 Jan 2026, 14:00")
+
+        if (monthFilter !== 'all') {
+          // Parse date manually from formatted string or rely on JS Date parsing if format is standard
+          // Format is "dd MMM yyyy, HH:mm" which Date.parse might handle depending on locale or format
+          // Let's try flexible parsing:
+          var dateStr = item.submittedAt;
+          // Extract Month and Year
+          // expected: "20 Jan 2026..."
+          var parts = dateStr.split(' ');
+          if (parts.length >= 3) {
+            var day = parts[0];
+            var monthName = parts[1]; // Jan, Feb...
+            var year = parts[2].replace(',', '');
+
+            // Convert month name to number index
+            var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var monthIdx = monthNames.indexOf(monthName);
+
+            if (monthIdx >= 0) {
+              var monthNum = String(monthIdx + 1).padStart(2, '0');
+              var itemMonthKey = year + '-' + monthNum;
+
+              if (itemMonthKey !== monthFilter) continue;
+            }
+          }
+        }
+
+        filteredData.push(item);
+      }
+
+      renderAdminCards(filteredData);
+    }
+
+    function renderAdminCards(data) {
+      var container = document.getElementById('adminContainer');
+
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
+        return;
+      }
+
+      var html = '';
+      for (var idx = 0; idx < data.length; idx++) {
+        var item = data[idx];
+        // Status color logic
+        var statusColor = 'badge-pending';
+        if (item.status === 'Done') statusColor = 'badge-done';
+        else if (item.status === 'On Process') statusColor = 'badge-process';
+
+        // Tentukan PIC options berdasarkan jenis request
+        var specificList = [];
+        var jenis = item.jenis || '';
+        if (jenis.indexOf("SMS") >= 0) {
+          specificList = picData.sms || [];
+        } else if (jenis.indexOf("GD") >= 0) {
+          specificList = picData.gd || [];
+        } else if (jenis.indexOf("CW") >= 0) {
+          specificList = picData.cw || [];
+        } else if (jenis.indexOf("CC") >= 0) {
+          specificList = picData.cc || [];
+        }
+
+        // Gabungkan specific list dengan CMO list kedalam array BARU
+        // CRITICAL FIX: Jangan gunakan push() ke array existing (mutasi data asli),
+        // tapi buat array baru dengan concat() agar data tidak terduplikasi terus menerus
+        var cmoList = picData.cmo || [];
+        var picOptions = specificList.concat(cmoList);
+
+        // Render detail request dengan error handling
+        var requestDetails = '';
+        try {
+          requestDetails = renderRequestDetails(item);
+        } catch (e) {
+          console.error('Error in renderRequestDetails for ' + (item.id || 'unknown') + ': ' + e.toString());
+          requestDetails = '<div class="text-red-500 text-xs">Error loading details</div>';
+        }
+
+        // CRITICAL: Setiap card HARUS dibungkus dengan wrapper div yang identik
+        // Gunakan string concatenation yang konsisten untuk SEMUA card tanpa exception
+        try {
+          // Validasi item data sebelum rendering
+          if (!item || typeof item !== 'object') {
+            throw new Error('Invalid item data');
+          }
+
+          var cardHtml = '';
+          // WRAPPER DIV - HARUS IDENTIK UNTUK SEMUA CARD
+          cardHtml += '<div class="admin-card-wrapper" style="margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;">';
+          cardHtml += '<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 hover:border-l-4 hover:border-orange-500 transition-all" style="display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding: 1rem !important;">';
+          cardHtml += '<div class="flex justify-between items-start mb-3">';
+          cardHtml += '<div class="flex-1">';
+          cardHtml += '<div class="flex justify-between items-start mb-2">';
+          cardHtml += '<div>';
+          cardHtml += '<span class="font-mono text-sm font-bold text-blue-800">' + escapeHtml(item.id || 'N/A') + '</span>';
+          cardHtml += '<div class="text-xs text-orange-500 font-bold uppercase mt-1">' + escapeHtml(item.jenis || '') + '</div>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="text-right">';
+          cardHtml += '<span class="badge ' + (statusColor || 'badge-pending') + '">' + escapeHtml(item.status || 'Pending') + '</span>';
+          cardHtml += '<div class="text-xs text-gray-500 mt-1">' + escapeHtml(item.submittedAt || '') + '</div>';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '<h3 class="font-bold text-gray-800 text-sm mb-2">' + escapeHtml(item.judul || 'No Title') + '</h3>';
+          cardHtml += '<div class="bg-gray-50 p-3 rounded text-xs mb-3 border border-gray-100">';
+          cardHtml += '<div class="text-orange-500 font-bold mb-1">DETAIL REQUEST:</div>';
+          cardHtml += requestDetails || '<div class="text-gray-500 text-xs">No details available</div>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="text-xs text-gray-600 grid grid-cols-2 gap-2 mb-3">';
+          cardHtml += '<div>';
+          cardHtml += '<span class="block text-gray-400 text-[10px] uppercase font-bold">Requester</span>';
+          cardHtml += '<span>' + escapeHtml(item.requester || '') + ' (' + escapeHtml(item.divisi || '') + ')</span>';
+          cardHtml += '</div>';
+          cardHtml += '<div>';
+          cardHtml += '<span class="block text-gray-400 text-[10px] uppercase font-bold">Contact Requester</span>';
+          var reqContactRaw = String(item.reqContact || '');
+          var reqContactClean = reqContactRaw.replace(/\D/g, '');
+          // Fix: remove 62 prefix if present in raw to avoid duplication if logic elsewhere adds it? 
+          // Actually the issue is "wa.me/wa.me/..."
+          // If raw input was already "wa.me/..."
+
+          // Allow flexibility if user typed "wa.me/..." or just number
+          var displayContact = reqContactRaw;
+          // Remove existing http/wa.me prefix for CLEAN number generation
+          var cleanNumber = reqContactRaw.replace(/https?:\/\//i, '').replace(/wa\.me\//i, '').replace(/\D/g, '');
+
+          // Format for link: must be just number
+          if (cleanNumber.startsWith('0')) cleanNumber = '62' + cleanNumber.substring(1);
+          if (!cleanNumber.startsWith('62')) cleanNumber = '62' + cleanNumber; // Default to ID if no country code? Or just assume it works. 
+          // Actually the key issue is the TEXT display was "https://wa.me/[input]" where input might range.
+
+          // The REQUEST was specific: if input is "wa.me/628..." result is "https://wa.me/wa.me/628..." -> WRONG.
+          // So we want https://wa.me/<CLEAN_NUMBER>
+
+          cardHtml += '<a href="https://wa.me/' + escapeAttr(cleanNumber) + '" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1 font-bold">';
+          cardHtml += '<i class="fab fa-whatsapp text-green-500"></i> https://wa.me/' + escapeAttr(cleanNumber);
+          cardHtml += '</a>';
+          cardHtml += '</div>';
+          cardHtml += '<div>';
+          cardHtml += '<span class="block text-gray-400 text-[10px] uppercase font-bold">Deadline</span>';
+          cardHtml += '<span>' + escapeHtml(item.fullDeadline || '') + '</span>';
+          cardHtml += '</div>';
+          cardHtml += '<div>';
+          cardHtml += '<span class="block text-gray-400 text-[10px] uppercase font-bold">Countdown to Deadline</span>';
+          var countdownText = item.countdown || '';
+          var countdownColor = getCountdownColor(countdownText);
+          cardHtml += '<span class="font-bold ' + countdownColor + '">';
+          cardHtml += escapeHtml(countdownText);
+          cardHtml += '</span>';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="grid grid-cols-2 gap-3 mt-3 bg-blue-50 p-3 rounded">';
+          cardHtml += '<div>';
+          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Name</label>';
+          var itemId = String(item.id || '');
+          cardHtml += '<select id="pic-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onPICChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<option value="">- Pilih PIC -</option>';
+          var picOptionsHtml = '';
+          try {
+            picOptionsHtml = buildPICOptions(picOptions || [], item.picName || '');
+          } catch (e) {
+            console.error('Error building PIC options: ' + e.toString());
+            picOptionsHtml = '';
+          }
+          cardHtml += picOptionsHtml;
+          cardHtml += '</select>';
+          cardHtml += '</div>';
+          cardHtml += '<div>';
+          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Contact</label>';
+          cardHtml += '<div class="flex items-center gap-2">';
+          cardHtml += '<input type="text" id="contact-' + escapeAttr(itemId) + '" value="' + escapeAttr(item.picContact || '') + '" class="flex-1 text-sm border border-gray-300 rounded p-2 bg-gray-100" readonly placeholder="Auto-fill">';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="mt-3">';
+          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">Link Final Asset (Isi = Status Done)</label>';
+          cardHtml += '<div class="flex gap-2">';
+          var finalLinkValue = item.finalLink || '';
+          cardHtml += '<input type="text" id="link-' + escapeAttr(itemId) + '" value="' + escapeAttr(finalLinkValue) + '" class="flex-1 text-sm border border-gray-300 rounded p-2" placeholder="Paste link hasil kerja disini..." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">';
+          if (finalLinkValue && String(finalLinkValue).trim() !== '') {
+            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-500 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
+            cardHtml += '<i class="fas fa-external-link-alt"></i>';
+            cardHtml += '</a>';
+          }
+          cardHtml += '</div>';
+          cardHtml += '</div>';
+          cardHtml += '<div class="flex gap-2 mt-3">';
+          var escapedJudul = escapeAttr(item.judul || '');
+          var escapedRequester = escapeAttr(item.requester || '');
+          // Chat PIC button - ukuran sedikit dikurangi agar muat 3 button
+          cardHtml += '<button onclick="sendWAPIC(event, \'' + escapeAttr(itemId) + '\')" class="flex-1 bg-green-500 text-white text-sm py-2 rounded hover:bg-green-600 flex items-center justify-center gap-1" data-judul="' + escapedJudul + '" data-id="' + escapeAttr(itemId) + '" data-requester="' + escapedRequester + '" style="min-width: 0; flex-shrink: 1;">';
+          cardHtml += '<i class="fab fa-whatsapp text-xs"></i> <span class="text-xs">Chat PIC</span>';
+          cardHtml += '</button>';
+          // Save button
+          cardHtml += '<button onclick="saveAdminChanges(\'' + escapeAttr(itemId) + '\')" class="bg-orange-500 text-white text-sm py-2 px-3 rounded hover:bg-orange-600 flex items-center justify-center gap-1" data-ticketid="' + escapeAttr(itemId) + '" style="flex-shrink: 0;">';
+          cardHtml += '<i class="fas fa-save text-xs"></i> <span class="text-xs">Save</span>';
+          cardHtml += '</button>';
+          // Delete button - warna merah dengan icon trash
+          cardHtml += '<button onclick="confirmDeleteTicket(\'' + escapeAttr(itemId) + '\', \'' + escapedJudul + '\')" class="bg-red-500 text-white text-sm py-2 px-3 rounded hover:bg-red-600 flex items-center justify-center gap-1" style="flex-shrink: 0;">';
+          cardHtml += '<i class="fas fa-trash text-xs"></i> <span class="text-xs">Delete</span>';
+          cardHtml += '</button>';
+          cardHtml += '</div>'; // tutup div flex gap-2 mt-3 (buttons)
+          cardHtml += '</div>'; // tutup div bg-white (card div)
+          // CLOSE WRAPPER DIV - HARUS ADA UNTUK SEMUA CARD
+          cardHtml += '</div>'; // tutup div admin-card-wrapper
+
+          // CRITICAL: Pastikan setiap card mendapat wrapper div yang identik
+          // Hanya tambahkan jika struktur div valid
+          if (cardHtml.indexOf('admin-card-wrapper') >= 0 && cardHtml.indexOf('</div>') >= 0) {
+            html += cardHtml;
+          } else {
+            throw new Error('Invalid card HTML structure');
+          }
+        } catch (e) {
+          // Jika ada error dalam rendering card, log error dan skip card ini
+          console.error('Error rendering card for ' + (item.id || 'unknown') + ': ' + e.toString());
+          console.error('Error stack: ', e.stack);
+          // Tambahkan placeholder untuk card yang error agar tidak mengacaukan spacing
+          var errorCardId = escapeHtml(item.id || 'unknown');
+          html += '<div class="admin-card-wrapper" style="margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;">';
+          html += '<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4" style="display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; padding: 1rem !important;">';
+          html += '<p class="text-red-500 text-sm font-bold">Error rendering card: ' + errorCardId + '</p>';
+          html += '<p class="text-gray-500 text-xs mt-1">' + escapeHtml(e.toString()) + '</p>';
+          html += '</div>';
+          html += '</div>';
+        }
+      }
+
+      if (html) {
+        // Ensure container uses block layout for proper spacing
+        container.style.display = 'block';
+        container.className = 'max-h-[600px] overflow-y-auto pr-2';
+        container.innerHTML = html;
+
+        // Force spacing on all wrapper divs after render untuk memastikan spacing
+        // CRITICAL: Gunakan multiple passes untuk memastikan SEMUA card mendapat spacing yang identik
+        setTimeout(function () {
+          // Pass 1: Target semua wrapper dengan class admin-card-wrapper dan set spacing
+          var wrappers = container.querySelectorAll('.admin-card-wrapper');
+
+          // Pastikan SEMUA wrapper div mendapat spacing yang identik tanpa exception
+          for (var i = 0; i < wrappers.length; i++) {
+            // CRITICAL: Set semua style properties dengan !important untuk memastikan tidak ada override
+            var styleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
+            wrappers[i].setAttribute('style', styleString);
+
+            // Pastikan card di dalam wrapper juga tidak memiliki margin yang bisa menyebabkan overlap
+            var card = wrappers[i].querySelector('.bg-white.border');
+            if (card) {
+              card.setAttribute('style', 'display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding: 1rem !important;');
+            }
+          }
+
+          // Pass 2: Verifikasi dan force reset jika ada wrapper yang tidak mendapat spacing
+          setTimeout(function () {
+            var allWrappers = container.querySelectorAll('.admin-card-wrapper');
+            var styleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
+
+            // CRITICAL: Force reset SEMUA wrapper untuk memastikan spacing yang identik
+            for (var j = 0; j < allWrappers.length; j++) {
+              var wrapper = allWrappers[j];
+              var computedStyle = window.getComputedStyle(wrapper);
+              var marginBottom = parseFloat(computedStyle.marginBottom);
+              var marginTop = parseFloat(computedStyle.marginTop);
+
+              // Force reset SEMUA wrapper tanpa exception untuk memastikan spacing identik
+              wrapper.setAttribute('style', styleString);
+
+              // Verifikasi ulang setelah set
+              var afterStyle = window.getComputedStyle(wrapper);
+              var afterMarginBottom = parseFloat(afterStyle.marginBottom);
+              if (afterMarginBottom < 48) {
+                // Jika masih kurang, force sekali lagi dengan metode berbeda
+                wrapper.style.marginBottom = '3rem';
+                wrapper.style.marginTop = '0';
+                wrapper.style.paddingTop = '0';
+                wrapper.style.paddingBottom = '0';
+                wrapper.style.display = 'block';
+                wrapper.style.width = '100%';
+                wrapper.style.clear = 'both';
+                wrapper.style.minHeight = '1px';
+                wrapper.style.position = 'relative';
+                wrapper.style.boxSizing = 'border-box';
+                wrapper.style.float = 'none';
+              }
+            }
+
+            // Pass 3: Final verification dan force reset untuk SEMUA wrapper
+            setTimeout(function () {
+              var finalWrappers = container.querySelectorAll('.admin-card-wrapper');
+              var finalStyleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
+
+              // CRITICAL: Force reset SEMUA wrapper sekali lagi untuk memastikan tidak ada yang terlewat
+              for (var k = 0; k < finalWrappers.length; k++) {
+                var finalWrapper = finalWrappers[k];
+                finalWrapper.setAttribute('style', finalStyleString);
+
+                // Double-check dengan computed style
+                var finalComputed = window.getComputedStyle(finalWrapper);
+                var finalMarginBottom = parseFloat(finalComputed.marginBottom);
+
+                // Jika masih ada yang tidak mendapat spacing, gunakan inline style langsung
+                if (finalMarginBottom < 48) {
+                  finalWrapper.style.setProperty('margin-bottom', '3rem', 'important');
+                  finalWrapper.style.setProperty('margin-top', '0', 'important');
+                  finalWrapper.style.setProperty('display', 'block', 'important');
+                  finalWrapper.style.setProperty('width', '100%', 'important');
+                  finalWrapper.style.setProperty('clear', 'both', 'important');
+                }
+              }
+            }, 150);
+          }, 100);
+        }, 50);
+      } else {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
+      }
+    }
+
+    function getCountdownColor(countdown) {
+      try {
+        if (!countdown || countdown === null || countdown === undefined) return 'text-gray-600';
+        var countdownStr = String(countdown || '');
+        if (countdownStr === 'Done') return 'text-green-700';
+        if (countdownStr.indexOf('TERLEWAT') >= 0) return 'text-red-600';
+        if (countdownStr === 'HARI INI') return 'text-orange-600';
+        return 'text-green-600';
+      } catch (e) {
+        return 'text-gray-600';
+      }
+    }
+
+    function buildPICOptions(picOptions, selectedName) {
+      try {
+        var optionsHtml = '';
+        if (!picOptions || !Array.isArray(picOptions)) {
+          return optionsHtml;
+        }
+        for (var p = 0; p < picOptions.length; p++) {
+          var pic = picOptions[p];
+          if (!pic || typeof pic !== 'object') {
+            continue;
+          }
+          var picName = pic.name || '';
+          var picPhone = pic.phone || '';
+          var picNickname = pic.nickname || '';
+          var isSelected = (selectedName && selectedName === picName) ? 'selected' : '';
+          optionsHtml += '<option value="' + escapeAttr(picName) + '" data-phone="' + escapeAttr(picPhone) + '" ' + isSelected + '>' + escapeHtml(picName) + ' (' + escapeHtml(picNickname) + ')</option>';
+        }
+        return optionsHtml;
+      } catch (e) {
+        console.error('Error in buildPICOptions: ' + e.toString());
+        return '';
+      }
+    }
+
+    // Helper function to escape HTML entities
+    function escapeHtml(text) {
+      try {
+        if (!text && text !== 0) return '';
+        var map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return String(text).replace(/[&<>"']/g, function (m) { return map[m] || m; });
+      } catch (e) {
+        return '';
+      }
+    }
+
+    // Helper function to escape HTML attributes (for value attributes)
+    function escapeAttr(text) {
+      try {
+        if (!text && text !== 0) return '';
+        return String(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function renderRequestDetails(item) {
+      try {
+        var details = '';
+        if (!item || typeof item !== 'object') {
+          return details;
+        }
+        var jenis = item.jenis || '';
+
+        // Memastikan field-field spesifik ditampilkan
+        if (jenis && jenis.indexOf && jenis.indexOf("SMS") >= 0) {
+          details = '<div class="mb-1"><strong class="text-gray-700">Platform:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700">Arahan:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+        } else if (jenis && jenis.indexOf && jenis.indexOf("GD") >= 0) {
+          details = '<div class="mb-1"><strong class="text-gray-700">Format:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700">Arahan Desain:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+        } else if (jenis && jenis.indexOf && jenis.indexOf("CW") >= 0) {
+          details = '<div class="mb-1"><strong class="text-gray-700">Tone:</strong> ' + escapeHtml(item.toneVoice || '') + ' | <strong class="text-gray-700">Audience:</strong> ' + escapeHtml(item.targetAudience || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700">Brief Konten:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+        } else if (jenis && jenis.indexOf && jenis.indexOf("CC") >= 0) {
+          details = '<div class="mb-1"><strong class="text-gray-700">Platform:</strong> ' + escapeHtml(item.platform || '') + ' | <strong class="text-gray-700">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700">Konsep Video:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+        }
+
+        if (item.refLink && item.refLink !== '-' && item.refLink !== '') {
+          details += '<div><strong class="text-gray-700">Referensi:</strong> <a href="' + escapeAttr(item.refLink) + '" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-link"></i> Buka Link</a></div>';
+        }
+
+        return details || '<div class="text-gray-500 text-xs">No details available</div>';
+      } catch (e) {
+        console.error('Error in renderRequestDetails: ' + e.toString());
+        return '<div class="text-red-500 text-xs">Error loading details</div>';
+      }
+    }
+
+    function onPICChange(ticketId) {
+      var picSelect = document.getElementById('pic-' + ticketId);
+      var contactInput = document.getElementById('contact-' + ticketId);
+
+      if (!picSelect) return;
+
+      var selectedOption = picSelect.options[picSelect.selectedIndex];
+
+      if (selectedOption && selectedOption.dataset && selectedOption.dataset.phone) {
+        contactInput.value = selectedOption.dataset.phone;
+        // Auto save ketika PIC dipilih
+        saveAdminChanges(ticketId);
+      }
+    }
+
+    function onFinalLinkChange(ticketId) {
+      // Auto save ketika final link diubah
+      saveAdminChanges(ticketId);
+    }
+
+    function saveAdminChanges(ticketId) {
+      var picSelect = document.getElementById('pic-' + ticketId);
+      var contactInput = document.getElementById('contact-' + ticketId);
+      var linkInput = document.getElementById('link-' + ticketId);
+
+      if (!picSelect || !contactInput || !linkInput) {
+        showNotification('Error: Element tidak ditemukan', 'error');
+        return;
+      }
+
+      var picName = picSelect.value;
+      var picContact = contactInput.value;
+      var finalLink = linkInput.value;
+
+      // Kirim ticketId ke server (bukan rowIndex)
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "updateTicketData", parameters: [ticketId, picName, picContact, '', finalLink] })
+      })
+      .then(resp => resp.json())
+      .then(result => {
+          if (result && result.indexOf && result.indexOf('Error') >= 0) {
+            showNotification(result, 'error');
+          } else {
+            showNotification('Data tersimpan! Status terupdate otomatis.', 'success');
+            // Refresh data untuk menampilkan status terbaru
+            setTimeout(refreshAdminData, 800);
+          }
+      })
+      .catch(error => {
+          showNotification('Error: ' + (error.message || error), 'error');
+      });
+    }
+
+    function sendWAPIC(event, ticketId) {
+      var picSelect = document.getElementById('pic-' + ticketId);
+      var contactInput = document.getElementById('contact-' + ticketId);
+
+      if (!picSelect || !contactInput) {
+        alert('Element tidak ditemukan!');
+        return;
+      }
+
+      var picName = picSelect.value;
+      var picContact = contactInput.value;
+
+      if (!picName || !picContact) {
+        alert('Pilih PIC terlebih dahulu!');
+        return;
+      }
+
+      // Get data from button attributes
+      var btn = event.target.closest('button');
+      var judul = btn ? (btn.getAttribute('data-judul') || '') : '';
+      var requester = btn ? (btn.getAttribute('data-requester') || '') : '';
+
+      var cleanedPhone = picContact.replace(/\D/g, '');
+      var text = 'Halo *' + picName + '*, kamu dapat tugas baru dari *' + requester + '*.\n\n*Ticket ID:* ' + ticketId + '\n*Judul:* ' + judul + '\n\nSilahkan cek detailnya. Semangat!';
+      var url = 'https://api.whatsapp.com/send/?phone=' + cleanedPhone + '&text=' + encodeURIComponent(text) + '&type=phone_number&app_absent=0';
+      window.open(url, '_blank');
+    }
+
+    function confirmDeleteTicket(ticketId, judul) {
+      // Decode HTML entities jika ada (karena judul dikirim dari escapeAttr)
+      var decodedJudul = '';
+      try {
+        // Decode HTML entities sederhana
+        decodedJudul = (judul || 'N/A')
+          .replace(/&#39;/g, "'")
+          .replace(/&quot;/g, '"')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+      } catch (e) {
+        decodedJudul = judul || 'N/A';
+      }
+
+      // Popup konfirmasi dengan informasi ticket
+      var confirmMessage = 'Apakah Anda yakin ingin menghapus data request ini?\n\n';
+      confirmMessage += 'Ticket ID: ' + ticketId + '\n';
+      confirmMessage += 'Judul: ' + decodedJudul + '\n\n';
+      confirmMessage += 'Data yang dihapus tidak dapat dikembalikan.';
+
+      if (confirm(confirmMessage)) {
+        // Jika dikonfirmasi, panggil fungsi delete
+        deleteTicket(ticketId);
+      }
+    }
+
+    function deleteTicket(ticketId) {
+      // Tampilkan loading notification
+      showNotification('Menghapus data...', 'info');
+
+      // Panggil backend function deleteRequest
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "deleteRequest", parameters: [ticketId] })
+      })
+      .then(resp => resp.json())
+      .then(result => {
+          if (result && result.success === true) {
+            showNotification('Data berhasil dihapus!', 'success');
+            // Refresh admin data setelah 500ms
+            setTimeout(function () {
+              refreshAdminData();
+            }, 500);
+          } else {
+            var errorMsg = result && result.message ? result.message : 'Gagal menghapus data';
+            showNotification('Error: ' + errorMsg, 'error');
+          }
+      })
+      .catch(error => {
+          showNotification('Error: ' + (error.message || error), 'error');
+      });
+    }
+
+    function showNotification(message, type) {
+      var notification = document.createElement('div');
+      var bgColor = 'bg-blue-500'; // Default untuk info
+      var icon = 'info-circle';
+
+      if (type === 'success') {
+        bgColor = 'bg-green-500';
+        icon = 'check-circle';
+      } else if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = 'exclamation-circle';
+      } else if (type === 'info') {
+        bgColor = 'bg-blue-500';
+        icon = 'info-circle';
+      }
+
+      notification.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 ' + bgColor;
+      notification.innerHTML = '<i class="fas fa-' + icon + ' mr-2"></i>' + message;
+      document.body.appendChild(notification);
+
+      var duration = type === 'info' ? 2000 : 3000;
+      setTimeout(function () {
+        notification.remove();
+      }, duration);
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+      var requestType = document.getElementById('requestType');
+      if (requestType) {
+        requestType.addEventListener('change', showDynamicSection);
+      }
+      showView('request');
+    });
+
+    // Fallback for older browsers
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(function () {
+        var requestType = document.getElementById('requestType');
+        if (requestType) {
+          requestType.addEventListener('change', showDynamicSection);
+        }
+      }, 100);
+    }
+  </script>
+</body>
+
+</html>
