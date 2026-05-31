@@ -16,6 +16,16 @@ function getRequestSheet() {
 }
 
 // ============================================
+// SETUP & AUTHORIZATION
+// ============================================
+// PENTING: Jalankan fungsi ini SATU KALI dari editor Apps Script (Run -> setupEmailAuth)
+// Ini diperlukan untuk memberikan izin (Otorisasi) agar script bisa mengirim email.
+function setupEmailAuth() {
+  MailApp.sendEmail(Session.getActiveUser().getEmail(), "Morpest Email Setup", "Otorisasi pengiriman email telah berhasil diaktifkan!");
+  Logger.log("Otorisasi email berhasil.");
+}
+
+// ============================================
 // BUG FIX: Menambahkan doPost(e) agar bisa 
 // menerima request POST dari Vercel/Frontend
 // ============================================
