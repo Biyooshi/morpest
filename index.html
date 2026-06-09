@@ -221,25 +221,28 @@
     <div class="p-6 md:p-8">
 
       <div id="viewRequest">
-        <div class="mb-6 text-center">
+        <div class="mb-6 text-center relative">
           <h1 class="text-2xl font-bold text-blue-800 uppercase">Job On Yours - Marketing Request Portal</h1>
           <p class="text-gray-500 text-sm mt-2">Isi form request dibawah ini untuk mengajukan permintaan kepada Tim
             Marketing Job On Yours</p>
+          <button type="button" onclick="openHelpModal()" class="absolute top-0 right-0 bg-blue-100 text-blue-800 px-3 py-1 text-sm font-bold rounded hover:bg-blue-200 transition-colors">
+            <i class="fas fa-question-circle mr-1"></i> Help
+          </button>
         </div>
 
         <form id="mainForm" onsubmit="submitForm(event)">
           <div class="mb-6 border-b pb-4">
             <h3 class="text-orange-500 font-bold mb-3">1. Identitas</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" name="reqName" required placeholder="Nama Lengkap"
-                class="border p-3 rounded-lg w-full">
+              <input type="text" id="reqName" name="reqName" required placeholder="Nama Lengkap"
+                class="border p-3 rounded-lg w-full" onblur="triggerCheckDuplicate()">
               <input type="text" name="reqNickname" required placeholder="Nama Panggilan"
                 class="border p-3 rounded-lg w-full">
               <input type="text" name="reqContact" required placeholder="wa.me/6281234567890"
                 class="border p-3 rounded-lg w-full">
               <input type="email" name="reqEmail" required placeholder="Alamat Email"
                 class="border p-3 rounded-lg w-full">
-              <select name="reqPosition" required class="border p-3 rounded-lg w-full">
+              <select id="reqPosition" name="reqPosition" required class="border p-3 rounded-lg w-full" onchange="checkPosition(); triggerCheckDuplicate()">
                 <option value="" disabled selected>- Posisi -</option>
                 <option value="Founder">Founder</option>
                 <option value="Co-Founder">Co-Founder</option>
@@ -257,6 +260,25 @@
                 <option value="CMO-CW">CMO-CW</option>
                 <option value="CMO-SMS">CMO-SMS</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Duplicate Warning Box -->
+          <div id="duplicateWarning" class="hidden mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-bold text-yellow-800">Peringatan: Ada Request Aktif!</h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                  <p id="duplicateMessage">Kamu sudah punya request yang masih aktif. Apakah ini masih dalam konteks yang sama?</p>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onclick="hideDuplicateWarning()" class="bg-yellow-200 text-yellow-800 px-3 py-1.5 text-xs font-bold rounded hover:bg-yellow-300 transition-colors">Lanjut sebagai request baru</button>
+                  <button type="button" onclick="showView('tracking')" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-xs font-bold rounded hover:bg-blue-200 transition-colors">Cek Request Aktif</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -280,8 +302,10 @@
                 <input type="date" name="reqDeadline" required class="border p-3 rounded-lg w-full">
               </div>
 
-              <input type="url" name="reqLink" placeholder="Link Referensi (Opsional)"
-                class="border p-3 rounded-lg w-full">
+              <div class="flex flex-col">
+                <label id="reqLinkLabel" class="text-xs text-gray-500 font-bold uppercase mb-1">Link Referensi (Opsional)</label>
+                <input type="url" id="reqLink" name="reqLink" placeholder="Masukkan Link Referensi" class="border p-3 rounded-lg w-full">
+              </div>
 
               <select id="requestType" name="requestType" required
                 class="border-2 border-blue-800 p-3 rounded-lg w-full bg-blue-50 font-medium">
@@ -299,6 +323,19 @@
 
                 <div id="sectionSMS" class="hidden space-y-3">
                   <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Upload untuk SMS</h4>
+                  
+                  <!-- SMS Guidelines -->
+                  <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 mb-4 shadow-sm">
+                    <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Panduan Request SMS:</p>
+                    <ul class="list-disc pl-5 space-y-1 text-xs">
+                      <li>Sertakan nama akun, judul konten, dan platform tujuan.</li>
+                      <li>Berikan link gdrive referensi atau aset yang sudah dikurasi.</li>
+                      <li>Jelaskan visual aset dengan detail (resolusi, format, size limit).</li>
+                      <li>Sertakan caption yang detail atau instruksi tagar (hashtag).</li>
+                      <li>Beri keterangan waktu spesifik untuk live/post.</li>
+                      <li>Cantumkan nama PIC dari divisi lain (jika ada kolaborasi).</li>
+                    </ul>
+                  </div>
                   <div>
                     <label class="text-xs text-gray-500 font-bold uppercase">Platform Tujuan</label>
                     <select name="smsPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
@@ -385,10 +422,30 @@
             </div>
           </div>
 
-          <button type="submit" id="submitBtn"
-            class="w-full py-3 px-6 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-all transform hover:-translate-y-1">
+          <!-- Pre-Submit Checklist -->
+          <div class="mb-6 bg-orange-50 border border-orange-200 p-4 rounded-lg shadow-sm">
+            <p class="font-bold text-orange-800 mb-2 text-sm"><i class="fas fa-check-square mr-1"></i>Checklist Sebelum Submit</p>
+            <div class="space-y-2 text-sm text-orange-900">
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <span>Semua kebutuhan dalam satu project ini sudah digabung dalam satu form</span>
+              </label>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <span id="checklistLinkText">Link Referensi sudah dilampirkan (opsional)</span>
+              </label>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <span>Detail request sudah ditulis dengan lengkap</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" disabled
+            class="w-full py-3 px-6 rounded-xl bg-gray-400 text-white font-bold cursor-not-allowed transition-all">
             <i class="fas fa-paper-plane mr-2"></i>Kirim Request
           </button>
+          <p class="text-center text-xs text-gray-500 mt-2">Centang semua checklist di atas untuk mengirim form.</p>
         </form>
       </div>
 
@@ -492,10 +549,163 @@
 
   </div>
 
+  <!-- Help Modal -->
+  <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-blue-800 text-white p-4 flex justify-between items-center rounded-t-xl">
+        <h2 class="font-bold text-lg"><i class="fas fa-book mr-2"></i>Panduan Form Morpest</h2>
+        <button type="button" onclick="closeHelpModal()" class="text-white hover:text-gray-200 focus:outline-none">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4 text-sm text-gray-700">
+        <div class="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-500">
+          <h3 class="font-bold text-orange-800 mb-1">1. Aturan Satu Konteks</h3>
+          <p>Jika requestmu masih berhubungan dengan project/acara yang sama, jadikan <strong>satu request saja</strong>. Jangan membuat form terpisah untuk desain dan caption dari acara yang sama.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-blue-800 mb-1">2. Link Referensi (Wajib Non-Marketing)</h3>
+          <p>Untuk divisi Non-Marketing, kamu diwajibkan menyertakan Link Referensi (Google Drive/Docs) yang berisi aset bahan mentah, foto, atau referensi pendukung.</p>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-blue-800 mb-1">3. Menulis Detail Arahan</h3>
+          <p>Tulis dengan jelas apa yang kamu inginkan, termasuk:</p>
+          <ul class="list-disc pl-5 mt-1 space-y-1">
+            <li>Gaya bahasa atau palet warna yang diinginkan</li>
+            <li>Teks spesifik yang harus ada di desain/caption</li>
+            <li>Target audiens</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-blue-800 mb-1">4. Estimasi Pengerjaan Minimum</h3>
+          <ul class="list-disc pl-5 mt-1 space-y-1">
+            <li><strong>Low Priority:</strong> H-7</li>
+            <li><strong>Medium Priority:</strong> H-3</li>
+            <li><strong>Urgent:</strong> H-1 (Wajib ACC Head/Co-Head divisi bersangkutan)</li>
+          </ul>
+        </div>
+
+        <div class="bg-red-50 p-3 rounded-lg border-l-4 border-red-500 mt-4">
+          <p class="font-bold text-red-800">Catatan Penting:</p>
+          <p>Request yang tidak jelas, tidak menyertakan referensi (bagi Non-Marketing), atau menyalahi SLA akan <strong>dikembalikan atau ditolak</strong> oleh admin.</p>
+        </div>
+      </div>
+      <div class="p-4 border-t text-right">
+        <button type="button" onclick="closeHelpModal()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-300 transition-colors">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxYXCwsWW0h8i8rdhWQpmPOnWpw7WQi_CcNAaPcGY6OjWyxRu6JFauM3VGj0i9uWj6_vg/exec";
     // Global variables
     var picData = {};
+
+    // --- NEW UI LOGIC ---
+    function openHelpModal() {
+      document.getElementById('helpModal').classList.remove('hidden');
+    }
+
+    function closeHelpModal() {
+      document.getElementById('helpModal').classList.add('hidden');
+    }
+
+    function checkPosition() {
+      var posElement = document.getElementById('reqPosition');
+      if (!posElement) return;
+      var pos = posElement.value;
+      var linkInput = document.getElementById('reqLink');
+      var linkLabel = document.getElementById('reqLinkLabel');
+      var checklistLinkText = document.getElementById('checklistLinkText');
+
+      if (!linkInput || !linkLabel || !checklistLinkText) return;
+
+      // Founder and Co-Founder are treated as Marketing (CMO rules).
+      // So non-marketing are those without "CMO", "Founder", "Co-Founder".
+      if (pos && !pos.startsWith('CMO') && pos !== 'Founder' && pos !== 'Co-Founder') {
+        // Non-Marketing
+        linkInput.setAttribute('required', 'required');
+        linkLabel.innerHTML = 'Link Referensi <span class="text-red-500 font-bold">(Wajib untuk Non-Marketing)</span>';
+        checklistLinkText.innerHTML = 'Link Referensi sudah dilampirkan <span class="text-red-500 font-bold">(Wajib)</span>';
+      } else {
+        // Marketing
+        linkInput.removeAttribute('required');
+        linkLabel.innerHTML = 'Link Referensi (Opsional)';
+        checklistLinkText.innerHTML = 'Link Referensi sudah dilampirkan (Opsional)';
+      }
+      checkSubmitConditions(); // re-eval checkbox state
+    }
+
+    function checkSubmitConditions() {
+      var checkboxes = document.querySelectorAll('.submit-checkbox');
+      var allChecked = true;
+      for (var i = 0; i < checkboxes.length; i++) {
+        if (!checkboxes[i].checked) {
+          allChecked = false;
+          break;
+        }
+      }
+      
+      var submitBtn = document.getElementById('submitBtn');
+      if (!submitBtn) return;
+
+      if (allChecked) {
+        submitBtn.removeAttribute('disabled');
+        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+      } else {
+        submitBtn.setAttribute('disabled', 'disabled');
+        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+      }
+    }
+
+    var checkDuplicateTimeout = null;
+    function triggerCheckDuplicate() {
+      clearTimeout(checkDuplicateTimeout);
+      checkDuplicateTimeout = setTimeout(function() {
+        var nameEl = document.getElementById('reqName');
+        var posEl = document.getElementById('reqPosition');
+        var name = nameEl ? nameEl.value : '';
+        var position = posEl ? posEl.value : '';
+        
+        if (name || position) {
+          fetch(GAS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              function: 'checkDuplicateRequest',
+              parameters: [name, position]
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.found && data.tickets && data.tickets.length > 0) {
+              var warningBox = document.getElementById('duplicateWarning');
+              var msgBox = document.getElementById('duplicateMessage');
+              if(warningBox && msgBox) {
+                var t = data.tickets[0]; // just show first found
+                msgBox.innerHTML = `Kamu memiliki request aktif: <strong>${t.id} - ${t.judul}</strong>. Apakah request baru ini masih dalam konteks yang sama? Jika iya, mohon jangan membuat request baru.`;
+                warningBox.classList.remove('hidden');
+              }
+            } else {
+              hideDuplicateWarning();
+            }
+          })
+          .catch(e => console.error("Duplicate check error:", e));
+        } else {
+          hideDuplicateWarning();
+        }
+      }, 1000); // debounce 1s
+    }
+
+    function hideDuplicateWarning() {
+      var box = document.getElementById('duplicateWarning');
+      if (box) box.classList.add('hidden');
+    }
+    // --- END NEW UI LOGIC ---
     var allAdminData = []; // Store raw admin data for filtering
     var currentView = 'request';
 

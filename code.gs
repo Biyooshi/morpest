@@ -50,6 +50,8 @@ function doPost(e) {
       result = updateTicketData(params[0], params[1], params[2], params[3], params[4]);
     } else if (func === "deleteRequest") {
       result = deleteRequest(params[0]);
+    } else if (func === "checkDuplicateRequest") {
+      result = checkDuplicateRequest(params[0], params[1]);
     } else {
       result = { error: "Function not found" };
     }
@@ -787,5 +789,52 @@ function sendWhatsAppMessage(targetNumber, message) {
   } catch(e) {
     Logger.log("WA Error: " + e.toString());
     return false;
+  }
+}
+
+// ============================================
+// API: Check Duplicate Request
+// ============================================
+function checkDuplicateRequest(name, position) {
+  try {
+    var sheet = getRequestSheet();
+    if (!sheet) return { found: false, message: "Sheet not found" };
+    
+    // Pastikan parameter tidak kosong
+    if (!name && !position) return { found: false };
+    
+    var data = sheet.getDataRange().getValues();
+    var activeTickets = [];
+    
+    // Mulai dari baris 2 (index 1) karena baris 1 adalah header
+    for (var i = 1; i < data.length; i++) {
+      var status = (data[i][17] || "Pending").toString().trim();
+      
+      // Hanya cek ticket yang belum Done (aktif)
+      if (status !== "Done") {
+        var reqName = (data[i][2] || "").toString().trim().toLowerCase();
+        var reqPosition = (data[i][5] || "").toString().trim().toLowerCase();
+        
+        var nameMatch = name && reqName === name.trim().toLowerCase();
+        var positionMatch = position && reqPosition === position.trim().toLowerCase();
+        
+        // Temukan jika nama sama ATAU posisi (divisi) sama
+        if (nameMatch || positionMatch) {
+          activeTickets.push({
+            id: data[i][0],
+            judul: data[i][9] || "-",
+            status: status
+          });
+        }
+      }
+    }
+    
+    if (activeTickets.length > 0) {
+      return { found: true, tickets: activeTickets };
+    }
+    
+    return { found: false };
+  } catch(e) {
+    return { found: false, error: e.toString() };
   }
 }
