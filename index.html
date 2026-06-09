@@ -11,6 +11,7 @@
 
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -24,9 +25,16 @@
       }
     }
   </script>
+  <script>
+    // Initial Dark Mode Check
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
   <style>
     body {
-      background-color: #2f668f;
       font-family: 'Poppins', sans-serif;
     }
 
@@ -148,18 +156,20 @@
   </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center py-10 px-4">
-  <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full relative min-h-[600px]">
+<body class="bg-joy-bg dark:bg-gray-900 transition-colors duration-300 min-h-screen flex items-center justify-center py-10 px-4">
 
-    <div class="h-3 bg-orange-500 w-full rounded-t-2xl"></div>
+  <!-- Main Container -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-6xl overflow-hidden relative transition-colors duration-300 min-h-[600px]">
+
+    <div class="h-3 bg-orange-50 dark:bg-orange-900/300 w-full rounded-t-2xl"></div>
 
     <div class="flex border-b border-gray-200" id="mainNav">
       <button type="button" onclick="showView('request')" id="navRequest"
-        class="flex-1 py-4 text-center border-b-2 border-orange-500 text-blue-800 font-semibold">
+        class="flex-1 py-4 text-center border-b-2 border-orange-500 text-blue-800 dark:text-blue-400 font-semibold">
         <i class="fas fa-plus-circle mr-2"></i>Request Form
       </button>
       <button type="button" onclick="showView('tracking')" id="navTracking"
-        class="flex-1 py-4 text-center text-gray-500">
+        class="flex-1 py-4 text-center text-gray-500 dark:text-gray-400">
         <i class="fas fa-search mr-2"></i>Request Status Checker
       </button>
     </div>
@@ -167,7 +177,7 @@
     <div id="adminHeader" class="hidden bg-gray-800 text-white p-4 -mx-8 -mt-6 mb-6 rounded-t-lg">
       <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-3">
-          <div class="bg-orange-500 p-2 rounded">
+          <div class="bg-orange-50 dark:bg-orange-900/300 p-2 rounded">
             <i class="fas fa-user-shield"></i>
           </div>
           <div>
@@ -177,7 +187,7 @@
         </div>
         <div class="flex gap-2">
           <button onclick="refreshAdminData()"
-            class="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded flex items-center gap-2">
+            class="text-sm bg-blue-50 dark:bg-blue-900/300 hover:bg-blue-600 px-3 py-1 rounded flex items-center gap-2">
             <i class="fas fa-sync"></i> Refresh
           </button>
           <button onclick="logoutAdmin()"
@@ -194,7 +204,7 @@
           <label class="text-sm font-bold text-gray-300 min-w-max"><i class="fas fa-filter mr-1"></i>Filter
             Status:</label>
           <select id="adminStatusFilter" onchange="applyAdminFilters()"
-            class="text-black text-sm p-2 rounded w-full md:w-40 border-none focus:ring-2 focus:ring-orange-500">
+            class="text-black text-sm p-2 rounded w-full md:w-40 border-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="on process">On Process</option>
@@ -205,14 +215,14 @@
           <label class="text-sm font-bold text-gray-300 min-w-max"><i class="far fa-calendar-alt mr-1"></i>Filter
             Bulan:</label>
           <select id="adminMonthFilter" onchange="applyAdminFilters()"
-            class="text-black text-sm p-2 rounded w-full md:w-48 border-none focus:ring-2 focus:ring-orange-500">
+            class="text-black text-sm p-2 rounded w-full md:w-48 border-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
             <option value="all">All Months</option>
             <!-- Options populated by JS -->
           </select>
         </div>
         <div class="relative w-full md:w-64 md:ml-auto">
           <input type="text" id="adminSearch" placeholder="Cari Ticket, Nama, Judul..." oninput="applyAdminFilters()"
-            class="text-black text-sm p-2 rounded pl-9 w-full border-none focus:ring-2 focus:ring-orange-500 outline-none">
+            class="text-black text-sm p-2 rounded pl-9 w-full border-none focus:ring-2 focus:ring-orange-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
           <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
         </div>
       </div>
@@ -221,13 +231,17 @@
     <div class="p-6 md:p-8">
 
       <div id="viewRequest">
-        <div class="mb-6 text-center relative">
-          <h1 class="text-2xl font-bold text-blue-800 uppercase">Job On Yours - Marketing Request Portal</h1>
-          <p class="text-gray-500 text-sm mt-2">Isi form request dibawah ini untuk mengajukan permintaan kepada Tim
-            Marketing Job On Yours</p>
-          <button type="button" onclick="openHelpModal()" class="absolute top-0 right-0 bg-blue-100 text-blue-800 px-3 py-1 text-sm font-bold rounded hover:bg-blue-200 transition-colors">
-            <i class="fas fa-question-circle mr-1"></i> Help
-          </button>
+        <div class="mb-6 text-center relative pt-10 md:pt-0">
+          <div class="absolute top-0 right-0 flex gap-2">
+            <button type="button" onclick="toggleDarkMode()" class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 text-sm font-bold rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i>
+            </button>
+            <button type="button" onclick="openHelpModal()" class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-400 dark:text-blue-100 px-3 py-1 text-sm font-bold rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+              <i class="fas fa-question-circle mr-1"></i> Help
+            </button>
+          </div>
+          <h1 class="text-2xl font-bold text-blue-800 dark:text-blue-400 uppercase">Job On Yours - Marketing Request Portal</h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Isi form request dibawah ini untuk mengajukan permintaan kepada Tim Marketing Job On Yours</p>
         </div>
 
         <form id="mainForm" onsubmit="submitForm(event)">
@@ -235,14 +249,14 @@
             <h3 class="text-orange-500 font-bold mb-3">1. Identitas</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="text" id="reqName" name="reqName" required placeholder="Nama Lengkap"
-                class="border p-3 rounded-lg w-full" onblur="triggerCheckDuplicate()">
+                class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onblur="triggerCheckDuplicate()">
               <input type="text" name="reqNickname" required placeholder="Nama Panggilan"
-                class="border p-3 rounded-lg w-full">
+                class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
               <input type="text" name="reqContact" required placeholder="wa.me/6281234567890"
-                class="border p-3 rounded-lg w-full">
+                class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
               <input type="email" name="reqEmail" required placeholder="Alamat Email"
-                class="border p-3 rounded-lg w-full">
-              <select id="reqPosition" name="reqPosition" required class="border p-3 rounded-lg w-full" onchange="checkPosition(); triggerCheckDuplicate()">
+                class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+              <select id="reqPosition" name="reqPosition" required class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="checkPosition(); triggerCheckDuplicate()">
                 <option value="" disabled selected>- Posisi -</option>
                 <option value="Founder">Founder</option>
                 <option value="Co-Founder">Co-Founder</option>
@@ -276,7 +290,7 @@
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
                   <button type="button" onclick="hideDuplicateWarning()" class="bg-yellow-200 text-yellow-800 px-3 py-1.5 text-xs font-bold rounded hover:bg-yellow-300 transition-colors">Lanjut sebagai request baru</button>
-                  <button type="button" onclick="showView('tracking')" class="bg-blue-100 text-blue-800 px-3 py-1.5 text-xs font-bold rounded hover:bg-blue-200 transition-colors">Cek Request Aktif</button>
+                  <button type="button" onclick="showView('tracking')" class="bg-blue-100 text-blue-800 dark:text-blue-400 px-3 py-1.5 text-xs font-bold rounded hover:bg-blue-200 transition-colors">Cek Request Aktif</button>
                 </div>
               </div>
             </div>
@@ -286,30 +300,28 @@
             <h3 class="text-orange-500 font-bold mb-3">2. Detail Request</h3>
             <div class="space-y-4">
               <input type="text" name="reqTitle" required placeholder="Judul Request ditulis singkat saja"
-                class="border p-3 rounded-lg w-full">
+                class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <select name="reqPriority" required class="border p-3 rounded-lg w-full">
+                  <select name="reqPriority" required class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="" disabled selected>Pilih tingkat urgensi requestmu</option>
                     <option value="Low Priority (H-7+)">Low Priority (H-7+)</option>
                     <option value="Medium Priority (H-3)">Medium Priority (H-3)</option>
                     <option value="High Priority / Urgent (H-1)">High Priority / Urgent (H-1)</option>
                   </select>
-                  <p class="text-xs text-gray-500 mt-1 italic">Catatan: Request dengan prioritas Urgent (H-1) wajib
-                    meminta persetujuan terlebih dahulu kepada Head/Co-Head terkait.</p>
                 </div>
-                <input type="date" name="reqDeadline" required class="border p-3 rounded-lg w-full">
+                <input type="date" name="reqDeadline" required class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
               </div>
 
               <div class="flex flex-col">
-                <label id="reqLinkLabel" class="text-xs text-gray-500 font-bold uppercase mb-1">Link Referensi (Opsional)</label>
-                <input type="url" id="reqLink" name="reqLink" placeholder="Masukkan Link Referensi" class="border p-3 rounded-lg w-full">
+                <label id="reqLinkLabel" class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Link Referensi (Opsional)</label>
+                <input type="url" id="reqLink" name="reqLink" placeholder="Masukkan Link Referensi" class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
               </div>
 
               <select id="requestType" name="requestType" required
-                class="border-2 border-blue-800 p-3 rounded-lg w-full bg-blue-50 font-medium">
-                <option value="" disabled selected>-- Pilih Jenis Request --</option>
+                class="border-2 border-blue-800 dark:border-blue-500 p-3 rounded-lg w-full bg-blue-50 dark:bg-blue-900/30 font-medium dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                onchange="showDynamicSection()"><option value="" disabled selected>-- Pilih Jenis Request --</option>
                 <option value="A. Request upload konten ke SMS">A. Request upload konten ke SMS</option>
                 <option value="B. Request Design ke GD">B. Request Design ke GD</option>
                 <option value="C. Request Penulisan Caption/Brief Content ke CW">C. Request Penulisan Caption/Brief
@@ -318,14 +330,14 @@
                   (Deactivated)</option>
               </select>
 
-              <div id="dynamicContainer" class="bg-gray-50 p-4 rounded-lg border hidden">
+              <div id="dynamicContainer" class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border hidden">
 
 
                 <div id="sectionSMS" class="hidden space-y-3">
-                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Upload untuk SMS</h4>
+                  <h4 class="font-bold text-blue-800 dark:text-blue-400 border-b pb-1 mb-2">Detail Upload untuk SMS</h4>
                   
                   <!-- SMS Guidelines -->
-                  <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 mb-4 shadow-sm">
+                  <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-400 mb-4 shadow-sm">
                     <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Panduan Request SMS:</p>
                     <ul class="list-disc pl-5 space-y-1 text-xs">
                       <li>Sertakan nama akun, judul konten, dan platform tujuan.</li>
@@ -337,8 +349,8 @@
                     </ul>
                   </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Platform Tujuan</label>
-                    <select name="smsPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Platform Tujuan</label>
+                    <select name="smsPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
                       <option value="Instagram Feeds">Instagram Feeds</option>
                       <option value="Instagram Reels">Instagram Reels</option>
                       <option value="Instagram Story">Instagram Story</option>
@@ -347,17 +359,28 @@
                     </select>
                   </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
-                    <textarea name="smsArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Arahan</label>
+                    <textarea name="smsArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                       placeholder="Jelaskan Arahan Request Uploadmu Disini..."></textarea>
                   </div>
                 </div>
 
                 <div id="sectionGD" class="hidden space-y-3">
-                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Request Design ke GD</h4>
+                  <h4 class="font-bold text-blue-800 dark:text-blue-400 border-b pb-1 mb-2">Request Design ke GD</h4>
+
+                  <!-- GD Guidelines -->
+                  <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-400 mb-4 shadow-sm">
+                    <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Panduan Request GD:</p>
+                    <ul class="list-disc pl-5 space-y-1 text-xs">
+                      <li>Sertakan referensi visual atau inspirasi desain (wajib bagi Non-Marketing).</li>
+                      <li>Jelaskan konteks dan tujuan desain dengan jelas.</li>
+                      <li>Sertakan teks (copywriting) pasti yang akan dimasukkan ke dalam desain.</li>
+                      <li>Sebutkan jika ada warna/font khusus atau ikuti guidelines JOY.</li>
+                    </ul>
+                  </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Format Design</label>
-                    <select name="gdFormat" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Format Design</label>
+                    <select name="gdFormat" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
                       <option value="Square (4:5)">Square (4:5)</option>
                       <option value="Potrait (9:16)">Potrait (9:16)</option>
                       <option value="Landscape (16:9)">Landscape (16:9)</option>
@@ -365,55 +388,66 @@
                     </select>
                   </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
-                    <textarea name="gdArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Arahan</label>
+                    <textarea name="gdArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                       placeholder="Jelaskan Arahan Request Designmu Disini..."></textarea>
                   </div>
                 </div>
 
                 <div id="sectionCW" class="hidden space-y-3">
-                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Caption/Brief untuk CW</h4>
+                  <h4 class="font-bold text-blue-800 dark:text-blue-400 border-b pb-1 mb-2">Detail Caption/Brief untuk CW</h4>
+
+                  <!-- CW Guidelines -->
+                  <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-400 mb-4 shadow-sm">
+                    <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Panduan Request CW:</p>
+                    <ul class="list-disc pl-5 space-y-1 text-xs">
+                      <li>Jelaskan tujuan utama pesan yang ingin disampaikan.</li>
+                      <li>Tentukan target audience secara spesifik.</li>
+                      <li>Sertakan poin-poin utama yang harus dibahas di caption.</li>
+                      <li>Jelaskan ajakan bertindak (Call To Action / CTA) di akhir paragraf.</li>
+                    </ul>
+                  </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label class="text-xs text-gray-500 font-bold uppercase">Tone of Voice</label>
-                      <select name="cwTone" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                      <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Tone of Voice</label>
+                      <select name="cwTone" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
                         <option value="Informatif">Informatif</option>
                         <option value="Casual">Casual</option>
                         <option value="Dramatis">Dramatis</option>
                       </select>
                     </div>
                     <div>
-                      <label class="text-xs text-gray-500 font-bold uppercase">Target Audience</label>
-                      <input name="cwAudience" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Target Audience</label>
+                      <input name="cwAudience" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         placeholder="Contoh: Mahasiswa">
                     </div>
                   </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
-                    <textarea name="cwArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Arahan</label>
+                    <textarea name="cwArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                       placeholder="Jelaskan Arahan Request Caption/Briefmu Disini..."></textarea>
                   </div>
                 </div>
 
                 <div id="sectionCC" class="hidden space-y-3">
-                  <h4 class="font-bold text-blue-800 border-b pb-1 mb-2">Detail Konten Video untuk CC</h4>
+                  <h4 class="font-bold text-blue-800 dark:text-blue-400 border-b pb-1 mb-2">Detail Konten Video untuk CC</h4>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label class="text-xs text-gray-500 font-bold uppercase">Platform</label>
-                      <select name="ccPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1">
+                      <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Platform</label>
+                      <select name="ccPlatform" class="w-full border p-2.5 rounded-lg text-sm bg-white mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
                         <option value="Instagram Reels">Instagram Reels</option>
                         <option value="TikTok">TikTok</option>
                       </select>
                     </div>
                     <div>
-                      <label class="text-xs text-gray-500 font-bold uppercase">Estimasi Durasi</label>
-                      <input name="ccDuration" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                      <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Estimasi Durasi</label>
+                      <input name="ccDuration" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         placeholder="Contoh: 30 Detik">
                     </div>
                   </div>
                   <div>
-                    <label class="text-xs text-gray-500 font-bold uppercase">Arahan</label>
-                    <textarea name="ccArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1"
+                    <label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Arahan</label>
+                    <textarea name="ccArahan" rows="4" class="w-full border p-2.5 rounded-lg text-sm mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                       placeholder="Jelaskan Arahan Request videomu Disini..."></textarea>
                   </div>
                 </div>
@@ -423,19 +457,19 @@
           </div>
 
           <!-- Pre-Submit Checklist -->
-          <div class="mb-6 bg-orange-50 border border-orange-200 p-4 rounded-lg shadow-sm">
-            <p class="font-bold text-orange-800 mb-2 text-sm"><i class="fas fa-check-square mr-1"></i>Checklist Sebelum Submit</p>
+          <div class="mb-6 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 p-4 rounded-lg shadow-sm">
+            <p class="font-bold text-orange-800 dark:text-orange-400 mb-2 text-sm"><i class="fas fa-check-square mr-1"></i>Checklist Sebelum Submit</p>
             <div class="space-y-2 text-sm text-orange-900">
               <label class="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <input type="checkbox" class="mt-1 submit-checkbox dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onchange="checkSubmitConditions()">
                 <span>Semua kebutuhan dalam satu project ini sudah digabung dalam satu form</span>
               </label>
               <label class="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <input type="checkbox" class="mt-1 submit-checkbox dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onchange="checkSubmitConditions()">
                 <span id="checklistLinkText">Link Referensi sudah dilampirkan (opsional)</span>
               </label>
               <label class="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" class="mt-1 submit-checkbox" onchange="checkSubmitConditions()">
+                <input type="checkbox" class="mt-1 submit-checkbox dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onchange="checkSubmitConditions()">
                 <span>Detail request sudah ditulis dengan lengkap</span>
               </label>
             </div>
@@ -445,7 +479,7 @@
             class="w-full py-3 px-6 rounded-xl bg-gray-400 text-white font-bold cursor-not-allowed transition-all">
             <i class="fas fa-paper-plane mr-2"></i>Kirim Request
           </button>
-          <p class="text-center text-xs text-gray-500 mt-2">Centang semua checklist di atas untuk mengirim form.</p>
+          <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Centang semua checklist di atas untuk mengirim form.</p>
         </form>
       </div>
 
@@ -453,10 +487,10 @@
         <div class="text-5xl text-green-500 mb-4">
           <i class="fas fa-check-circle"></i>
         </div>
-        <h2 class="text-xl font-bold text-blue-800">Request Berhasil!</h2>
+        <h2 class="text-xl font-bold text-blue-800 dark:text-blue-400">Request Berhasil!</h2>
         <div class="bg-gray-100 p-4 rounded-lg my-6 max-w-sm mx-auto">
-          <p class="text-sm text-gray-500">Ticket ID Anda</p>
-          <p id="successTicket" class="text-2xl font-mono font-bold text-blue-800">MKT-XXXX</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Ticket ID Anda</p>
+          <p id="successTicket" class="text-2xl font-mono font-bold text-blue-800 dark:text-blue-400">MKT-XXXX</p>
         </div>
         <div class="flex gap-2 justify-center">
           <a id="btnCalendar" href="#" target="_blank"
@@ -464,7 +498,7 @@
             <i class="fas fa-calendar-plus mr-1"></i> Calendar
           </a>
           <button onclick="showView('request')"
-            class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            class="px-4 py-2 bg-orange-50 dark:bg-orange-900/300 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
             Buat Baru
           </button>
         </div>
@@ -472,28 +506,28 @@
 
       <div id="viewTracking" class="hidden">
         <div class="max-w-md mx-auto">
-          <h2 class="text-center font-bold text-blue-800 mb-4">
+          <h2 class="text-center font-bold text-blue-800 dark:text-blue-400 mb-4">
             <i class="fas fa-search mr-2"></i>Cek Status Request
           </h2>
           <div class="flex gap-2 mb-6">
             <input type="text" id="trackId" placeholder="MKT-XXXX"
-              class="flex-1 border p-3 rounded-lg text-center uppercase font-mono">
+              class="flex-1 border p-3 rounded-lg text-center uppercase font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
             <button onclick="trackTicket()" class="bg-blue-800 text-white px-5 rounded-lg hover:bg-blue-900">
               <i class="fas fa-search"></i>
             </button>
           </div>
 
-          <div id="trackResult" class="hidden border rounded-xl p-5 bg-gray-50">
+          <div id="trackResult" class="hidden border rounded-xl p-5 bg-gray-50 dark:bg-gray-700">
             <div class="flex justify-between items-start mb-1">
-              <span id="resultId" class="font-mono font-bold text-blue-800"></span>
+              <span id="resultId" class="font-mono font-bold text-blue-800 dark:text-blue-400"></span>
               <span id="resultStatus" class="badge"></span>
             </div>
 
 
             <div class="text-[10px] font-bold text-orange-500 mb-2 uppercase tracking-wide" id="resultJenis"></div>
-            <div class="text-[10px] text-gray-500 mb-3 uppercase tracking-wide" id="resultTujuan"></div>
+            <div class="text-[10px] text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide" id="resultTujuan"></div>
 
-            <h3 id="resultTitle" class="font-bold text-gray-800 mb-2 text-lg leading-snug"></h3>
+            <h3 id="resultTitle" class="font-bold text-gray-800 dark:text-gray-200 mb-2 text-lg leading-snug"></h3>
 
             <div class="text-sm text-gray-600 grid grid-cols-2 gap-2 mb-4 border-t border-gray-200 pt-2">
               <div>
@@ -528,19 +562,19 @@
 
     </div>
 
-    <div class="bg-gray-50 p-3 text-center border-t text-xs text-gray-500 rounded-b-2xl">
+    <div class="bg-gray-50 dark:bg-gray-700 p-3 text-center border-t text-xs text-gray-500 dark:text-gray-400 rounded-b-2xl">
       <div class="flex justify-between items-center px-4">
         <span>Made by <a href="https://www.instagram.com/biyoosh.i/" target="_blank" class="hover:text-blue-500 font-semibold">Muhammad Nurul Qolbi (CMO - JOY)</a></span>
         <div class="flex gap-4">
           <!-- Icon Admin -->
-          <button onclick="showAdmin()" class="text-blue-800 hover:underline">
+          <button onclick="showAdmin()" class="text-blue-800 dark:text-blue-400 hover:underline">
             <i class="fas fa-lock mr-1"></i>Admin
           </button>
           <button onclick="window.location.href='/dashboard.html'"
-            class="text-blue-800 hover:underline">
+            class="text-blue-800 dark:text-blue-400 hover:underline">
             <i class="fas fa-chart-bar mr-1"></i>Dashboard
           </button>
-          <button onclick="window.location.href='/list.html'" class="text-blue-800 hover:underline">
+          <button onclick="window.location.href='/list.html'" class="text-blue-800 dark:text-blue-400 hover:underline">
             <i class="fas fa-list mr-1"></i>Request List
           </button>
         </div>
@@ -558,29 +592,31 @@
           <i class="fas fa-times text-xl"></i>
         </button>
       </div>
-      <div class="p-6 space-y-4 text-sm text-gray-700">
-        <div class="bg-orange-50 p-3 rounded-lg border-l-4 border-orange-500">
-          <h3 class="font-bold text-orange-800 mb-1">1. Aturan Satu Konteks</h3>
-          <p>Jika requestmu masih berhubungan dengan project/acara yang sama, jadikan <strong>satu request saja</strong>. Jangan membuat form terpisah untuk desain dan caption dari acara yang sama.</p>
-        </div>
-        
-        <div>
-          <h3 class="font-bold text-blue-800 mb-1">2. Link Referensi (Wajib Non-Marketing)</h3>
-          <p>Untuk divisi Non-Marketing, kamu diwajibkan menyertakan Link Referensi (Google Drive/Docs) yang berisi aset bahan mentah, foto, atau referensi pendukung.</p>
+      <div class="p-6 space-y-4 text-sm text-gray-700 dark:text-gray-300">
+        <div class="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg border-l-4 border-orange-500">
+          <h3 class="font-bold text-orange-800 dark:text-orange-400 mb-1">Alur Request Morpest</h3>
+          <ol class="list-decimal pl-5 space-y-2">
+            <li><strong>Mulai:</strong> Requester ingin meminta tim marketing membuatkan desain, copywriting, atau upload konten.</li>
+            <li>Requester mengisi form Morpest dengan lengkap dan mendapatkan <strong>Ticket ID</strong>.</li>
+            <li>Requester konfirmasi sudah mengisi Morpest dan memberikan Ticket ID di grup <strong>All-Team Batch 3</strong> (Tag CMO, Head, dan Co-Head terkait).</li>
+            <li>Tim Marketing mengerjakan request sesuai prioritas.</li>
+            <li>Tim Marketing konfirmasi bila sudah selesai di grup All-Marketing, lalu tag Requester.</li>
+            <li><strong>Selesai:</strong> Requester mengecek hasil requestan menggunakan Ticket ID di Morpest.</li>
+          </ol>
         </div>
 
         <div>
-          <h3 class="font-bold text-blue-800 mb-1">3. Menulis Detail Arahan</h3>
-          <p>Tulis dengan jelas apa yang kamu inginkan, termasuk:</p>
-          <ul class="list-disc pl-5 mt-1 space-y-1">
-            <li>Gaya bahasa atau palet warna yang diinginkan</li>
-            <li>Teks spesifik yang harus ada di desain/caption</li>
-            <li>Target audiens</li>
-          </ul>
+          <h3 class="font-bold text-blue-800 dark:text-blue-400 mb-1">1. Aturan Satu Konteks</h3>
+          <p>Jika requestmu masih berhubungan dengan project/acara yang sama, jadikan <strong>satu request saja</strong>.</p>
         </div>
         
         <div>
-          <h3 class="font-bold text-blue-800 mb-1">4. Estimasi Pengerjaan Minimum</h3>
+          <h3 class="font-bold text-blue-800 dark:text-blue-400 mb-1">2. Link Referensi (Wajib Non-Marketing)</h3>
+          <p>Untuk divisi Non-Marketing, kamu diwajibkan menyertakan Link Referensi (Google Drive/Docs) yang berisi aset referensi pendukung.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-blue-800 dark:text-blue-400 mb-1">3. Estimasi Pengerjaan Minimum</h3>
           <ul class="list-disc pl-5 mt-1 space-y-1">
             <li><strong>Low Priority:</strong> H-7</li>
             <li><strong>Medium Priority:</strong> H-3</li>
@@ -594,7 +630,7 @@
         </div>
       </div>
       <div class="p-4 border-t text-right">
-        <button type="button" onclick="closeHelpModal()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-300 transition-colors">Tutup</button>
+        <button type="button" onclick="closeHelpModal()" class="bg-gray-200 text-gray-800 dark:text-gray-200 px-4 py-2 rounded font-bold hover:bg-gray-300 transition-colors">Tutup</button>
       </div>
     </div>
   </div>
@@ -605,6 +641,16 @@
     var picData = {};
 
     // --- NEW UI LOGIC ---
+    function toggleDarkMode() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+      }
+    }
+
     function openHelpModal() {
       document.getElementById('helpModal').classList.remove('hidden');
     }
@@ -655,11 +701,11 @@
       if (allChecked) {
         submitBtn.removeAttribute('disabled');
         submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+        submitBtn.classList.add('bg-orange-50 dark:bg-orange-900/300', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
       } else {
         submitBtn.setAttribute('disabled', 'disabled');
         submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+        submitBtn.classList.remove('bg-orange-50 dark:bg-orange-900/300', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
       }
     }
 
@@ -743,19 +789,19 @@
     function updateNavButtons(activeView) {
       var navButtons = document.querySelectorAll('#mainNav button');
       for (var i = 0; i < navButtons.length; i++) {
-        navButtons[i].classList.remove('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
-        navButtons[i].classList.add('text-gray-500');
+        navButtons[i].classList.remove('border-b-2', 'border-orange-500', 'text-blue-800 dark:text-blue-400', 'font-semibold');
+        navButtons[i].classList.add('text-gray-500 dark:text-gray-400');
       }
 
       var navRequest = document.getElementById('navRequest');
       var navTracking = document.getElementById('navTracking');
 
       if (activeView === 'request' && navRequest) {
-        navRequest.classList.add('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
-        navRequest.classList.remove('text-gray-500');
+        navRequest.classList.add('border-b-2', 'border-orange-500', 'text-blue-800 dark:text-blue-400', 'font-semibold');
+        navRequest.classList.remove('text-gray-500 dark:text-gray-400');
       } else if (activeView === 'tracking' && navTracking) {
-        navTracking.classList.add('border-b-2', 'border-orange-500', 'text-blue-800', 'font-semibold');
-        navTracking.classList.remove('text-gray-500');
+        navTracking.classList.add('border-b-2', 'border-orange-500', 'text-blue-800 dark:text-blue-400', 'font-semibold');
+        navTracking.classList.remove('text-gray-500 dark:text-gray-400');
       }
     }
 
@@ -983,7 +1029,7 @@
       document.getElementById('adminContainer').innerHTML = `
           <div class="text-center py-8">
             <div class="loader inline-block mb-2"></div>
-            <p class="text-gray-500">Loading data...</p>
+            <p class="text-gray-500 dark:text-gray-400">Loading data...</p>
           </div>
         `;
 
@@ -999,7 +1045,7 @@
           document.getElementById('adminContainer').innerHTML = `
               <div class="text-center py-8 text-red-500">
                 <p>Error loading data: ${error.message}</p>
-                <button onclick="refreshAdminData()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Retry</button>
+                <button onclick="refreshAdminData()" class="mt-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/300 text-white rounded">Retry</button>
               </div>
             `;
       });
@@ -1112,7 +1158,7 @@
       var container = document.getElementById('adminContainer');
 
       if (!data || data.length === 0) {
-        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
+        container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
         return;
       }
 
@@ -1175,18 +1221,18 @@
           cardHtml += '<div class="flex-1">';
           cardHtml += '<div class="flex justify-between items-start mb-2">';
           cardHtml += '<div>';
-          cardHtml += '<span class="font-mono text-sm font-bold text-blue-800">' + escapeHtml(item.id || 'N/A') + '</span>';
+          cardHtml += '<span class="font-mono text-sm font-bold text-blue-800 dark:text-blue-400">' + escapeHtml(item.id || 'N/A') + '</span>';
           cardHtml += '<div class="text-xs text-orange-500 font-bold uppercase mt-1">' + escapeHtml(item.jenis || '') + '</div>';
           cardHtml += '</div>';
           cardHtml += '<div class="text-right">';
           cardHtml += '<span class="badge ' + (statusColor || 'badge-pending') + '">' + escapeHtml(item.status || 'Pending') + '</span>';
-          cardHtml += '<div class="text-xs text-gray-500 mt-1">' + escapeHtml(item.submittedAt || '') + '</div>';
+          cardHtml += '<div class="text-xs text-gray-500 dark:text-gray-400 mt-1">' + escapeHtml(item.submittedAt || '') + '</div>';
           cardHtml += '</div>';
           cardHtml += '</div>';
-          cardHtml += '<h3 class="font-bold text-gray-800 text-sm mb-2">' + escapeHtml(item.judul || 'No Title') + '</h3>';
-          cardHtml += '<div class="bg-gray-50 p-3 rounded text-xs mb-3 border border-gray-100">';
+          cardHtml += '<h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm mb-2">' + escapeHtml(item.judul || 'No Title') + '</h3>';
+          cardHtml += '<div class="bg-gray-50 dark:bg-gray-700 p-3 rounded text-xs mb-3 border border-gray-100">';
           cardHtml += '<div class="text-orange-500 font-bold mb-1">DETAIL REQUEST:</div>';
-          cardHtml += requestDetails || '<div class="text-gray-500 text-xs">No details available</div>';
+          cardHtml += requestDetails || '<div class="text-gray-500 dark:text-gray-400 text-xs">No details available</div>';
           cardHtml += '</div>';
           cardHtml += '<div class="text-xs text-gray-600 grid grid-cols-2 gap-2 mb-3">';
           cardHtml += '<div>';
@@ -1241,15 +1287,15 @@
           var showLegacy = (ticketNum >= 1001 && ticketNum <= 1190);
 
           if (showLegacy) {
-            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 bg-blue-50 p-3 rounded">';
+            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 bg-blue-50 dark:bg-blue-900/30 p-3 rounded">';
           } else {
-            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 bg-blue-50 p-3 rounded">';
+            cardHtml += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 bg-blue-50 dark:bg-blue-900/30 p-3 rounded">';
           }
           
           // Column 1: PIC Active
           cardHtml += '<div>';
-          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Active</label>';
-          cardHtml += '<select id="pic-active-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onActivePICChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase block mb-1">PIC Active</label>';
+          cardHtml += '<select id="pic-active-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onchange="onActivePICChange(\'' + escapeAttr(itemId) + '\')">';
           cardHtml += '<option value="">- Pilih PIC Active -</option>';
           cardHtml += buildPICOptions(activeOptions || [], isActiveSelected ? item.picName : '');
           cardHtml += '</select>';
@@ -1258,8 +1304,8 @@
           // Column 2: PIC Legacy
           if (showLegacy) {
             cardHtml += '<div>';
-            cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Legacy</label>';
-            cardHtml += '<select id="pic-legacy-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white" onchange="onLegacyPICChange(\'' + escapeAttr(itemId) + '\')">';
+            cardHtml += '<label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase block mb-1">PIC Legacy</label>';
+            cardHtml += '<select id="pic-legacy-' + escapeAttr(itemId) + '" class="w-full text-sm border border-gray-300 rounded p-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" onchange="onLegacyPICChange(\'' + escapeAttr(itemId) + '\')">';
             cardHtml += '<option value="">- Pilih PIC Legacy -</option>';
             cardHtml += buildPICOptions(legacyOptions || [], isLegacySelected ? item.picName : '');
             cardHtml += '</select>';
@@ -1268,19 +1314,19 @@
 
           // Column 3: PIC Contact
           cardHtml += '<div>';
-          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">PIC Contact</label>';
+          cardHtml += '<label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase block mb-1">PIC Contact</label>';
           cardHtml += '<div class="flex items-center gap-2">';
-          cardHtml += '<input type="text" id="contact-' + escapeAttr(itemId) + '" value="' + escapeAttr(item.picContact || '') + '" class="flex-1 text-sm border border-gray-300 rounded p-2 bg-gray-100" readonly placeholder="Auto-fill">';
+          cardHtml += '<input type="text" id="contact-' + escapeAttr(itemId) + '" value="' + escapeAttr(item.picContact || '') + '" class="flex-1 text-sm border border-gray-300 rounded p-2 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" readonly placeholder="Auto-fill">';
           cardHtml += '</div>';
           cardHtml += '</div>';
           cardHtml += '</div>';
           cardHtml += '<div class="mt-3">';
-          cardHtml += '<label class="text-xs text-gray-500 font-bold uppercase block mb-1">Link Final Asset (Isi = Status Done)</label>';
+          cardHtml += '<label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase block mb-1">Link Final Asset (Isi = Status Done)</label>';
           cardHtml += '<div class="flex gap-2">';
           var finalLinkValue = item.finalLink || '';
-          cardHtml += '<input type="text" id="link-' + escapeAttr(itemId) + '" value="' + escapeAttr(finalLinkValue) + '" class="flex-1 text-sm border border-gray-300 rounded p-2" placeholder="Paste link hasil kerja disini..." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<input type="text" id="link-' + escapeAttr(itemId) + '" value="' + escapeAttr(finalLinkValue) + '" class="flex-1 text-sm border border-gray-300 rounded p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Paste link hasil kerja disini..." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">';
           if (finalLinkValue && String(finalLinkValue).trim() !== '') {
-            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-500 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
+            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-50 dark:bg-blue-900/300 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
             cardHtml += '<i class="fas fa-external-link-alt"></i>';
             cardHtml += '</a>';
           }
@@ -1294,7 +1340,7 @@
           cardHtml += '<i class="fab fa-whatsapp text-xs"></i> <span class="text-xs">Chat PIC</span>';
           cardHtml += '</button>';
           // Save button
-          cardHtml += '<button onclick="saveAdminChanges(\'' + escapeAttr(itemId) + '\')" class="bg-orange-500 text-white text-sm py-2 px-3 rounded hover:bg-orange-600 flex items-center justify-center gap-1" data-ticketid="' + escapeAttr(itemId) + '" style="flex-shrink: 0;">';
+          cardHtml += '<button onclick="saveAdminChanges(\'' + escapeAttr(itemId) + '\')" class="bg-orange-50 dark:bg-orange-900/300 text-white text-sm py-2 px-3 rounded hover:bg-orange-600 flex items-center justify-center gap-1" data-ticketid="' + escapeAttr(itemId) + '" style="flex-shrink: 0;">';
           cardHtml += '<i class="fas fa-save text-xs"></i> <span class="text-xs">Save</span>';
           cardHtml += '</button>';
           // Delete button - warna merah dengan icon trash
@@ -1322,7 +1368,7 @@
           html += '<div class="admin-card-wrapper" style="margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;">';
           html += '<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4" style="display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; padding: 1rem !important;">';
           html += '<p class="text-red-500 text-sm font-bold">Error rendering card: ' + errorCardId + '</p>';
-          html += '<p class="text-gray-500 text-xs mt-1">' + escapeHtml(e.toString()) + '</p>';
+          html += '<p class="text-gray-500 dark:text-gray-400 text-xs mt-1">' + escapeHtml(e.toString()) + '</p>';
           html += '</div>';
           html += '</div>';
         }
@@ -1414,7 +1460,7 @@
           }, 100);
         }, 50);
       } else {
-        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
+        container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
       }
     }
 
@@ -1492,24 +1538,24 @@
 
         // Memastikan field-field spesifik ditampilkan
         if (jenis && jenis.indexOf && jenis.indexOf("SMS") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700">Platform:</strong> ' + escapeHtml(item.platform || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700">Arahan:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("GD") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700">Format:</strong> ' + escapeHtml(item.platform || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700">Arahan Desain:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Format:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan Desain:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CW") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700">Tone:</strong> ' + escapeHtml(item.toneVoice || '') + ' | <strong class="text-gray-700">Audience:</strong> ' + escapeHtml(item.targetAudience || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700">Brief Konten:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Tone:</strong> ' + escapeHtml(item.toneVoice || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Audience:</strong> ' + escapeHtml(item.targetAudience || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Brief Konten:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CC") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700">Platform:</strong> ' + escapeHtml(item.platform || '') + ' | <strong class="text-gray-700">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700">Konsep Video:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.platform || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
+          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Konsep Video:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         }
 
         if (item.refLink && item.refLink !== '-' && item.refLink !== '') {
-          details += '<div><strong class="text-gray-700">Referensi:</strong> <a href="' + escapeAttr(item.refLink) + '" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-link"></i> Buka Link</a></div>';
+          details += '<div><strong class="text-gray-700 dark:text-gray-300">Referensi:</strong> <a href="' + escapeAttr(item.refLink) + '" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-link"></i> Buka Link</a></div>';
         }
 
-        return details || '<div class="text-gray-500 text-xs">No details available</div>';
+        return details || '<div class="text-gray-500 dark:text-gray-400 text-xs">No details available</div>';
       } catch (e) {
         console.error('Error in renderRequestDetails: ' + e.toString());
         return '<div class="text-red-500 text-xs">Error loading details</div>';
@@ -1697,7 +1743,7 @@
 
     function showNotification(message, type) {
       var notification = document.createElement('div');
-      var bgColor = 'bg-blue-500'; // Default untuk info
+      var bgColor = 'bg-blue-50 dark:bg-blue-900/300'; // Default untuk info
       var icon = 'info-circle';
 
       if (type === 'success') {
@@ -1707,7 +1753,7 @@
         bgColor = 'bg-red-500';
         icon = 'exclamation-circle';
       } else if (type === 'info') {
-        bgColor = 'bg-blue-500';
+        bgColor = 'bg-blue-50 dark:bg-blue-900/300';
         icon = 'info-circle';
       }
 

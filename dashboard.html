@@ -9,6 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -28,6 +29,13 @@
           }
         }
       }
+    }
+  </script>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -70,6 +78,17 @@
       padding: 1.5rem;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       color: #1e293b;
+      transition: all 0.3s ease;
+    }
+
+    .dark body {
+      background: #0f172a;
+    }
+
+    .dark .chart-card {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
     }
 
     .badge {
@@ -224,6 +243,10 @@
         class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-orange-500/30">
         <i class="fas fa-magic"></i> Auto Assign
       </button>
+      <button type="button" onclick="toggleDarkMode()"
+        class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-sm font-medium px-3 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg">
+        <i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i>
+      </button>
       <a href="/"
         class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-lg">
         <i class="fas fa-arrow-left"></i> Back
@@ -298,11 +321,11 @@
       <div class="chart-card">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
               <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><i class="fas fa-chart-bar"></i></span> Tren
               Bulanan
             </h2>
-            <p class="text-xs text-gray-500 font-medium mt-1">Volume request masuk per bulan</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Volume request masuk per bulan</p>
           </div>
         </div>
         <div id="chartByMonth" style="height:250px; width:100%;"></div>
@@ -312,11 +335,11 @@
       <div class="chart-card">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
               <span class="bg-orange-100 text-orange-600 p-1.5 rounded-lg"><i class="fas fa-chart-pie"></i></span>
               Distribusi Divisi
             </h2>
-            <p class="text-xs text-gray-500 font-medium mt-1">Persentase jenis request (SMS/GD/CW/CC)</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Persentase jenis request (SMS/GD/CW/CC)</p>
           </div>
         </div>
         <div id="chartByType" style="height:250px; width:100%;"></div>
@@ -330,10 +353,10 @@
       <!-- PIC PERFORMANCE CHART (Takes 1 Column) -->
       <div class="chart-card lg:col-span-1 flex flex-col">
         <div class="mb-4">
-          <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+          <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
             <span class="bg-green-100 text-green-600 p-1.5 rounded-lg"><i class="fas fa-medal"></i></span> Top 10 PIC
           </h2>
-          <p class="text-xs text-gray-500 font-medium mt-1">Performa penyelesaian tugas</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Performa penyelesaian tugas</p>
         </div>
         <div id="chartPIC" class="flex-1 min-h-[300px] w-full"></div>
       </div>
@@ -342,11 +365,11 @@
       <div class="chart-card lg:col-span-2 flex flex-col">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
               <span class="bg-red-100 text-red-600 p-1.5 rounded-lg"><i class="fas fa-exclamation-triangle"></i></span>
               Urgent & Overdue
             </h2>
-            <p class="text-xs text-gray-500 font-medium mt-1">Prioritas tinggi (H-1) atau melebihi deadline</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Prioritas tinggi (H-1) atau melebihi deadline</p>
           </div>
           <span
             class="bg-red-50 text-red-600 border border-red-100 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
@@ -354,7 +377,7 @@
           </span>
         </div>
 
-        <div id="urgentTable" class="flex-1 w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+        <div id="urgentTable" class="flex-1 w-full bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 overflow-hidden">
           <div class="flex items-center justify-center h-full min-h-[200px]">
             <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
             </p>
@@ -371,15 +394,15 @@
       <div class="chart-card">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
               <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><i class="fas fa-users"></i></span> Active PIC
               Workload
             </h2>
-            <p class="text-xs text-gray-500 font-medium mt-1">Beban tugas yang sedang dikerjakan</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Beban tugas yang sedang dikerjakan</p>
           </div>
         </div>
         <div id="workloadActiveTable"
-          class="w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
+          class="w-full bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
           <div class="flex items-center justify-center h-[200px]">
             <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
             </p>
@@ -391,15 +414,15 @@
       <div class="chart-card">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="font-extrabold text-gray-800 text-lg flex items-center gap-2">
+            <h2 class="font-extrabold text-gray-800 dark:text-gray-200 text-lg flex items-center gap-2">
               <span class="bg-gray-100 text-gray-600 p-1.5 rounded-lg"><i class="fas fa-archive"></i></span> Legacy PIC
               Workload
             </h2>
-            <p class="text-xs text-gray-500 font-medium mt-1">Sisa tugas PIC lama (Deactivated)</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Sisa tugas PIC lama (Deactivated)</p>
           </div>
         </div>
         <div id="workloadLegacyTable"
-          class="w-full bg-gray-50 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
+          class="w-full bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
           <div class="flex items-center justify-center h-[200px]">
             <p class="text-gray-400 text-sm font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...
             </p>
@@ -633,7 +656,7 @@
     function renderUrgentTable(items) {
       var el = document.getElementById('urgentTable');
       if (!items || items.length === 0) {
-        el.innerHTML = '<div class="flex flex-col items-center justify-center h-full min-h-[250px] bg-white"><div class="bg-green-50 p-4 rounded-full mb-3"><i class="fas fa-check text-green-500 text-3xl"></i></div><p class="text-green-600 font-bold">Semua Aman!</p><p class="text-gray-500 text-sm mt-1">Tidak ada request urgent atau overdue</p></div>';
+        el.innerHTML = '<div class="flex flex-col items-center justify-center h-full min-h-[250px] bg-white"><div class="bg-green-50 p-4 rounded-full mb-3"><i class="fas fa-check text-green-500 text-3xl"></i></div><p class="text-green-600 font-bold">Semua Aman!</p><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Tidak ada request urgent atau overdue</p></div>';
         return;
       }
 
@@ -709,13 +732,13 @@
         hasData = true;
 
         var totalBadge = 'bg-blue-100 text-blue-700';
-        var activeBadge = item.activeCount > 2 ? 'bg-red-100 text-red-700' : (item.activeCount > 0 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500');
-        var doneBadge = item.doneCount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500';
+        var activeBadge = item.activeCount > 2 ? 'bg-red-100 text-red-700' : (item.activeCount > 0 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400');
+        var doneBadge = item.doneCount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400';
 
         var ticketsHtml = '';
         if (item.activeTickets && item.activeTickets.length > 0) {
           for (var t = 0; t < item.activeTickets.length; t++) {
-            ticketsHtml += '<span class="inline-block bg-blue-50 text-blue-600 border border-blue-100 text-[10px] px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">' + item.activeTickets[t] + '</span>';
+            ticketsHtml += '<span class="inline-block bg-blue-50 dark:bg-blue-900/30 text-blue-600 border border-blue-100 text-[10px] px-1.5 py-0.5 rounded mr-1 mb-1 font-mono">' + item.activeTickets[t] + '</span>';
           }
         } else {
           ticketsHtml = '<span class="text-gray-400 italic text-[10px]">-</span>';
@@ -802,8 +825,19 @@
       document.getElementById('liveIndicator').style.display = 'flex';
     }
 
+    function toggleDarkMode() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+      }
+    }
+
     function showError(msg) {
-      document.getElementById('loadingState').style.display = 'none';
+      const el = document.getElementById('loadingState');
+      if (el) { el.style.display = 'none'; }
       document.getElementById('dashboardContent').style.display = 'none';
       document.getElementById('errorState').style.display = 'flex';
       document.getElementById('errorMsg').textContent = msg;
