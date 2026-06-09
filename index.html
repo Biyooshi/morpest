@@ -161,7 +161,7 @@
   <!-- Main Container -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-6xl overflow-hidden relative transition-colors duration-300 min-h-[600px]">
 
-    <div class="h-3 bg-orange-50 dark:bg-orange-900/300 w-full rounded-t-2xl"></div>
+    <div class="h-3 bg-orange-500 w-full rounded-t-2xl"></div>
 
     <div class="flex border-b border-gray-200" id="mainNav">
       <button type="button" onclick="showView('request')" id="navRequest"
@@ -177,7 +177,7 @@
     <div id="adminHeader" class="hidden bg-gray-800 text-white p-4 sm:p-6 w-full">
       <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-3">
-          <div class="bg-orange-50 dark:bg-orange-900/300 p-2 rounded">
+          <div class="bg-orange-500 p-2 rounded">
             <i class="fas fa-user-shield"></i>
           </div>
           <div>
@@ -187,7 +187,7 @@
         </div>
         <div class="flex gap-2">
           <button onclick="refreshAdminData()"
-            class="text-sm bg-blue-50 dark:bg-blue-900/300 hover:bg-blue-600 px-3 py-1 rounded flex items-center gap-2">
+            class="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded flex items-center gap-2">
             <i class="fas fa-sync"></i> Refresh
           </button>
           <button onclick="logoutAdmin()"
@@ -498,7 +498,7 @@
             <i class="fas fa-calendar-plus mr-1"></i> Calendar
           </a>
           <button onclick="showView('request')"
-            class="px-4 py-2 bg-orange-50 dark:bg-orange-900/300 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
+            class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors">
             Buat Baru
           </button>
         </div>
@@ -701,11 +701,11 @@
       if (allChecked) {
         submitBtn.removeAttribute('disabled');
         submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.add('bg-orange-50', 'dark:bg-orange-900/300', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+        submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
       } else {
         submitBtn.setAttribute('disabled', 'disabled');
         submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.remove('bg-orange-50', 'dark:bg-orange-900/300', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
+        submitBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'transform', 'hover:-translate-y-1');
       }
     }
 
@@ -1045,7 +1045,7 @@
           document.getElementById('adminContainer').innerHTML = `
               <div class="text-center py-8 text-red-500">
                 <p>Error loading data: ${error.message}</p>
-                <button onclick="refreshAdminData()" class="mt-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/300 text-white rounded">Retry</button>
+                <button onclick="refreshAdminData()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Retry</button>
               </div>
             `;
       });
@@ -1326,7 +1326,7 @@
           var finalLinkValue = item.finalLink || '';
           cardHtml += '<input type="text" id="link-' + escapeAttr(itemId) + '" value="' + escapeAttr(finalLinkValue) + '" class="flex-1 text-sm border border-gray-300 rounded p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Paste link hasil kerja disini..." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">';
           if (finalLinkValue && String(finalLinkValue).trim() !== '') {
-            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-50 dark:bg-blue-900/300 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
+            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-500 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
             cardHtml += '<i class="fas fa-external-link-alt"></i>';
             cardHtml += '</a>';
           }
@@ -1340,7 +1340,7 @@
           cardHtml += '<i class="fab fa-whatsapp text-xs"></i> <span class="text-xs">Chat PIC</span>';
           cardHtml += '</button>';
           // Save button
-          cardHtml += '<button onclick="saveAdminChanges(\'' + escapeAttr(itemId) + '\')" class="bg-orange-50 dark:bg-orange-900/300 text-white text-sm py-2 px-3 rounded hover:bg-orange-600 flex items-center justify-center gap-1" data-ticketid="' + escapeAttr(itemId) + '" style="flex-shrink: 0;">';
+          cardHtml += '<button onclick="saveAdminChanges(\'' + escapeAttr(itemId) + '\')" class="bg-orange-500 text-white text-sm py-2 px-3 rounded hover:bg-orange-600 flex items-center justify-center gap-1" data-ticketid="' + escapeAttr(itemId) + '" style="flex-shrink: 0;">';
           cardHtml += '<i class="fas fa-save text-xs"></i> <span class="text-xs">Save</span>';
           cardHtml += '</button>';
           // Delete button - warna merah dengan icon trash
@@ -1743,7 +1743,7 @@
 
     function showNotification(message, type) {
       var notification = document.createElement('div');
-      var bgColor = 'bg-blue-50 dark:bg-blue-900/300'; // Default untuk info
+      var bgColor = 'bg-blue-500'; // Default untuk info
       var icon = 'info-circle';
 
       if (type === 'success') {
@@ -1753,7 +1753,7 @@
         bgColor = 'bg-red-500';
         icon = 'exclamation-circle';
       } else if (type === 'info') {
-        bgColor = 'bg-blue-50 dark:bg-blue-900/300';
+        bgColor = 'bg-blue-500';
         icon = 'info-circle';
       }
 
