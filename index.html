@@ -220,6 +220,18 @@
             <!-- Options populated by JS -->
           </select>
         </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <label class="text-sm font-bold text-gray-300 min-w-max"><i class="fas fa-layer-group mr-1"></i>Filter
+            Divisi:</label>
+          <select id="adminDivisiFilter" onchange="applyAdminFilters()"
+            class="text-black text-sm p-2 rounded w-full md:w-40 border-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+            <option value="all">All Divisi</option>
+            <option value="sms">SMS</option>
+            <option value="gd">GD</option>
+            <option value="cw">CW</option>
+            <option value="cc" disabled>CC (Deactive)</option>
+          </select>
+        </div>
         <div class="relative w-full md:w-64 md:ml-auto">
           <input type="text" id="adminSearch" placeholder="Cari Ticket, Nama, Judul..." oninput="applyAdminFilters()"
             class="text-black text-sm p-2 rounded pl-9 w-full border-none focus:ring-2 focus:ring-orange-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
@@ -1089,10 +1101,12 @@
     function applyAdminFilters() {
       var statusFilterEl = document.getElementById('adminStatusFilter');
       var monthFilterEl = document.getElementById('adminMonthFilter');
+      var divisiFilterEl = document.getElementById('adminDivisiFilter');
       var adminSearchEl = document.getElementById('adminSearch');
       
       var statusFilter = (statusFilterEl && statusFilterEl.value ? statusFilterEl.value : 'all').toLowerCase();
       var monthFilter = (monthFilterEl && monthFilterEl.value ? monthFilterEl.value : 'all');
+      var divisiFilter = (divisiFilterEl && divisiFilterEl.value ? divisiFilterEl.value : 'all').toLowerCase();
       var searchKeyword = (adminSearchEl && adminSearchEl.value ? adminSearchEl.value : '').toLowerCase();
  
       var filteredData = [];
@@ -1102,35 +1116,30 @@
         // Filter Status
         var statusValue = (item.status || 'Pending').toLowerCase();
         if (statusFilter !== 'all' && statusValue !== statusFilter) continue;
- 
-        // Filter Month (Based on submittedAt timestamp if available or parse date?)
-        // item.submittedAt is formatted string "dd MMM yyyy, HH:mm"
-        // Better to use raw date from properties if available? 
-        // The getAdminData in Code.gs sends formatted strings.
-        // Let's parse the string relative to Month filter.
-        // submittedAt format: "dd MMM yyyy, HH:mm" (e.g. "20 Jan 2026, 14:00")
 
+        // Filter Divisi (berdasarkan jenis request)
+        if (divisiFilter !== 'all') {
+          var jenisVal = (item.jenis || '').toUpperCase();
+          var matchDivisi = false;
+          if (divisiFilter === 'sms' && (jenisVal.indexOf('SMS') >= 0 || jenisVal.indexOf('UPLOAD KONTEN') >= 0)) matchDivisi = true;
+          else if (divisiFilter === 'gd' && (jenisVal.indexOf('GD') >= 0 || jenisVal.indexOf('DESIGN') >= 0)) matchDivisi = true;
+          else if (divisiFilter === 'cw' && (jenisVal.indexOf('CW') >= 0 || jenisVal.indexOf('CAPTION') >= 0)) matchDivisi = true;
+          else if (divisiFilter === 'cc' && (jenisVal.indexOf('CC') >= 0 || jenisVal.indexOf('VIDEO') >= 0)) matchDivisi = true;
+          if (!matchDivisi) continue;
+        }
+
+        // Filter Month
         if (monthFilter !== 'all') {
-          // Parse date manually from formatted string or rely on JS Date parsing if format is standard
-          // Format is "dd MMM yyyy, HH:mm" which Date.parse might handle depending on locale or format
-          // Let's try flexible parsing:
           var dateStr = item.submittedAt;
-          // Extract Month and Year
-          // expected: "20 Jan 2026..."
           var parts = dateStr.split(' ');
           if (parts.length >= 3) {
-            var day = parts[0];
-            var monthName = parts[1]; // Jan, Feb...
+            var monthName = parts[1];
             var year = parts[2].replace(',', '');
-
-            // Convert month name to number index
             var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             var monthIdx = monthNames.indexOf(monthName);
-
             if (monthIdx >= 0) {
               var monthNum = String(monthIdx + 1).padStart(2, '0');
               var itemMonthKey = year + '-' + monthNum;
-
               if (itemMonthKey !== monthFilter) continue;
             }
           }

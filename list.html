@@ -146,6 +146,16 @@
                         <option value="all">All Months</option>
                     </select>
                 </div>
+                <div class="flex items-center gap-2">
+                    <label for="divisiFilter" class="font-semibold text-gray-700 dark:text-gray-300"><i class="fas fa-layer-group mr-1"></i>Filter Divisi:</label>
+                    <select id="divisiFilter" class="border rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                        <option value="all">All Divisi</option>
+                        <option value="sms">SMS</option>
+                        <option value="gd">GD</option>
+                        <option value="cw">CW</option>
+                        <option value="cc" disabled>CC (Deactive)</option>
+                    </select>
+                </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <div class="relative">
@@ -246,10 +256,12 @@
         function attachFilterHandlers() {
             var statusFilter = document.getElementById('statusFilter');
             var monthFilter = document.getElementById('monthFilter');
+            var divisiFilter = document.getElementById('divisiFilter');
             var globalSearch = document.getElementById('globalSearch');
             
             if (statusFilter) statusFilter.addEventListener('change', applyFilters);
             if (monthFilter) monthFilter.addEventListener('change', applyFilters);
+            if (divisiFilter) divisiFilter.addEventListener('change', applyFilters);
             if (globalSearch) globalSearch.addEventListener('input', applyFilters);
         }
 
@@ -271,10 +283,12 @@
         function applyFilters() {
             var statusFilterEl = document.getElementById('statusFilter');
             var monthFilterEl = document.getElementById('monthFilter');
+            var divisiFilterEl = document.getElementById('divisiFilter');
             var globalSearchEl = document.getElementById('globalSearch');
             
             var statusFilter = (statusFilterEl && statusFilterEl.value ? statusFilterEl.value : 'all').toLowerCase();
             var monthFilter = (monthFilterEl && monthFilterEl.value ? monthFilterEl.value : 'all');
+            var divisiFilter = (divisiFilterEl && divisiFilterEl.value ? divisiFilterEl.value : 'all').toLowerCase();
             var searchKeyword = (globalSearchEl && globalSearchEl.value ? globalSearchEl.value : '').toLowerCase();
 
             // A. FILTERING
@@ -284,6 +298,17 @@
                 var statusValue = ((row.status || 'Pending') + '').toLowerCase();
 
                 if (statusFilter !== 'all' && statusValue !== statusFilter) continue;
+
+                // Filter Divisi
+                if (divisiFilter !== 'all') {
+                    var jenisVal = (row.jenis || '').toUpperCase();
+                    var matchDivisi = false;
+                    if (divisiFilter === 'sms' && (jenisVal.indexOf('SMS') >= 0 || jenisVal.indexOf('UPLOAD KONTEN') >= 0)) matchDivisi = true;
+                    else if (divisiFilter === 'gd' && (jenisVal.indexOf('GD') >= 0 || jenisVal.indexOf('DESIGN') >= 0)) matchDivisi = true;
+                    else if (divisiFilter === 'cw' && (jenisVal.indexOf('CW') >= 0 || jenisVal.indexOf('CAPTION') >= 0)) matchDivisi = true;
+                    else if (divisiFilter === 'cc' && (jenisVal.indexOf('CC') >= 0 || jenisVal.indexOf('VIDEO') >= 0)) matchDivisi = true;
+                    if (!matchDivisi) continue;
+                }
 
                 if (monthFilter !== 'all') {
                     var dateVal = new Date(row.timestamp);
