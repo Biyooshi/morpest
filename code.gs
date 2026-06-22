@@ -52,6 +52,8 @@ function doPost(e) {
       result = deleteRequest(params[0]);
     } else if (func === "checkDuplicateRequest") {
       result = checkDuplicateRequest(params[0], params[1]);
+    } else if (func === "autoAssignAllPending") {
+      result = autoAssignAllPending();
     } else {
       result = { error: "Function not found" };
     }
@@ -730,6 +732,100 @@ function getCMODashboardData() {
     
   } catch(e) {
     return { error: e.toString() };
+  }
+}
+
+// ============================================
+// API: Auto Assign All Pending Tickets
+// ============================================
+function autoAssignAllPending() {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch(e) {
+    return { success: false, message: "Server sedang sibuk, coba lagi sebentar." };
+  }
+
+  try {
+    var sheet = getRequestSheet();
+    if (!sheet) return { success: false, message: "Sheet tidak ditemukan." };
+
+    var data = sheet.getDataRange().getValues();
+    var picData = getPICData();
+    var assigned = 0;
+    var skipped = 0;
+    var errors = [];
+
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[0] || row[0].toString().trim() === "") continue;
+
+      var status = (row[17] || "Pending").toString().trim();
+      // Hanya proses yang masih Pending
+      if (status !== "Pending") { skipped++; continue; }
+
+      var jenis = (row[7] || "").toString().toUpperCase();
+      var candidates = [];
+
+      // Pilih kandidat PIC berdasarkan jenis request
+      if (jenis.indexOf("SMS") >= 0 || jenis.indexOf("UPLOAD KONTEN") >= 0) {
+        candidates = picData.sms || [];
+      } else if (jenis.indexOf("GD") >= 0 || jenis.indexOf("DESIGN") >= 0) {
+        candidates = picData.gd || [];
+      } else if (jenis.indexOf("CW") >= 0 || jenis.indexOf("CAPTION") >= 0) {
+        candidates = picData.cw || [];
+      } else if (jenis.indexOf("CC") >= 0 || jenis.indexOf("VIDEO") >= 0) {
+        candidates = picData.cc || [];
+      }
+
+      if (!candidates || candidates.length === 0) { skipped++; continue; }
+
+      // Pilih PIC secara acak dari kandidat
+      var randomIdx = Math.floor(Math.random() * candidates.length);
+      var picSelected = candidates[randomIdx];
+
+      var picName = picSelected.name;
+      var picPhone = picSelected.phone || "";
+      var picEmail = picSelected.email || "";
+      var picNick = picSelected.nickname || picName.split(" ")[0];
+
+      var reqTitle = row[9] || "-";
+      var reqName = row[2] || "-";
+      var reqContact = row[4] || "";
+      var reqEmail = row[16] || "";
+      var ticketId = row[0];
+
+      // Update sheet: PIC Name (col 19), PIC Contact (col 20), Status (col 18)
+      sheet.getRange(i + 1, 19).setValue(picName);
+      sheet.getRange(i + 1, 20).setValue(picPhone);
+      sheet.getRange(i + 1, 18).setValue("On Process");
+
+      // Kirim notifikasi ke PIC yang ditugaskan
+      var picMsg = "*TUGAS BARU - MORPEST*\n\nHalo " + picNick + ",\nKamu telah di-assign secara otomatis untuk mengerjakan request berikut:\n\nTicket ID: *" + ticketId + "*\nJudul: *" + reqTitle + "*\nJenis: " + row[7] + "\nDeadline: " + (row[8] ? Utilities.formatDate(new Date(row[8]), getRequestSpreadsheet().getSpreadsheetTimeZone(), "dd MMM yyyy") : "-") + "\n\nMohon segera dikerjakan sesuai deadline!\n_Job On Yours Marketing_";
+
+      if (picPhone) sendWhatsAppMessage(picPhone, picMsg);
+      if (picEmail) sendEmailNotification(picEmail, "Tugas Baru (Auto Assign): " + ticketId, picMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
+
+      // Kirim notifikasi ke requester bahwa request sedang diproses
+      var reqMsg = "*REQUEST DIPROSES*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picName + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
+      if (reqContact) sendWhatsAppMessage(reqContact, reqMsg);
+      if (reqEmail && reqEmail !== "-") sendEmailNotification(reqEmail, "Request Diproses: " + ticketId, reqMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
+
+      assigned++;
+    }
+
+    SpreadsheetApp.flush();
+    lock.releaseLock();
+
+    var msg = assigned > 0
+      ? "✅ Berhasil auto-assign " + assigned + " ticket! Notifikasi telah dikirim ke PIC dan Requester."
+      : "ℹ️ Tidak ada ticket Pending yang perlu di-assign. (" + skipped + " ticket dilewati)";
+
+    return { success: true, assigned: assigned, skipped: skipped, message: msg };
+
+  } catch(e) {
+    try { lock.releaseLock(); } catch(ex) {}
+    return { success: false, message: "Error: " + e.toString() };
   }
 }
 
