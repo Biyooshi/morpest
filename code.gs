@@ -354,8 +354,8 @@ function getPICData() {
       { name: "Shellbitav Azazel", nickname: "Shelby", phone: "6285172283505", email: "ch3llb14z@gmail.com" }
     ],
     "gd": [
-      { name: "Head Graphic Designer", nickname: "Head-GD", phone: "6280808080808", email: "headgd@gmail.com" },
-      { name: "Co-Head Graphic Designer", nickname: "Co-Head-GD", phone: "6280808080808", email: "coheadgd@gmai.com" },
+      { name: "Fanisa Aulia Nur Hakmalia", nickname: "Fanisa", phone: "6281357557510", email: "fanisaanh@gmail.com" },
+      { name: "Dita Dara", nickname: "Dita", phone: "6289665060586", email: "dd.is.ditadara@gmail.com" },
       { name: "Yusmita Alya Melanie", nickname: "Alya", phone: "6285792300256", email: "yusmitaalya@gmail.com" },
       { name: "Syafa Salsabila", nickname: "Syafa", phone: "62882003120378", email: "syafasalsabila226@gmail.com" },
       { name: "Lidia Siregar", nickname: "Lidia", phone: "6281316207014", email: "kembaroktober06@gmail.com" },
