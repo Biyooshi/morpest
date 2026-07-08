@@ -184,8 +184,31 @@ function processForm(formObject) {
     
     // --- SEND NOTIFICATIONS ---
     var adminMsg = "*NEW REQUEST MORPEST*\n\nTicket ID: " + ticketId + "\nDari: " + (formObject.reqName || "-") + " (" + (formObject.reqPosition || "-") + ")\nJudul: " + (formObject.reqTitle || "-") + "\nJenis: " + jenisRequest + "\nDeadline: " + (formObject.reqDeadline || "-") + "\n\nHarap segera di-assign ke PIC yang bertugas.";
+    
+    // 1. Notify CMO (Default)
     sendWhatsAppMessage("6285233142178", adminMsg); // Admin Obi
     sendEmailNotification("qolbimuhammad00@gmail.com", "New Request: " + ticketId, adminMsg.replace(/\n/g, '<br>')); // CMO gets explicit admin email
+    
+    // 2. Notify Head & Co-Head based on division
+    var divisionNotifTargets = [];
+    var jr = jenisRequest.toLowerCase();
+    
+    if (jr.indexOf("upload konten") >= 0 || jr.indexOf("sms") >= 0) {
+      divisionNotifTargets.push({ name: "Riska Stephanie", phone: "62895352730008", email: "riskastphnie28@gmail.com" });
+      divisionNotifTargets.push({ name: "Naya Azani", phone: "62895391527014", email: "nayaazani13@gmail.com" });
+    } else if (jr.indexOf("request design") >= 0 || jr.indexOf("gd") >= 0) {
+      divisionNotifTargets.push({ name: "Fanisa Aulia Nur Hakmalia", phone: "6281357557510", email: "fanisaanh@gmail.com" });
+      divisionNotifTargets.push({ name: "Dita Dara", phone: "6289665060586", email: "dd.is.ditadara@gmail.com" });
+    } else if (jr.indexOf("penulisan caption") >= 0 || jr.indexOf("cw") >= 0) {
+      divisionNotifTargets.push({ name: "Benedict Jemima Cecilia Pietersz", phone: "6282114887824", email: "bjcpietersz47@gmail.com" });
+      divisionNotifTargets.push({ name: "Ridatasa Nadiawati", phone: "6289656144248", email: "Ridatasa@gmail.com" });
+    }
+    
+    for (var n = 0; n < divisionNotifTargets.length; n++) {
+      var target = divisionNotifTargets[n];
+      sendWhatsAppMessage(target.phone, adminMsg);
+      sendEmailNotification(target.email, "New Request Divisi: " + ticketId, adminMsg.replace(/\n/g, '<br>'));
+    }
     
     var reqMsg = "*REQUEST BERHASIL DIBUAT*\n\nHalo " + (formObject.reqNickname || "-") + ",\nRequest kamu dengan judul *" + (formObject.reqTitle || "-") + "* telah diterima.\nTicket ID: *" + ticketId + "*\n\nKamu dapat mengecek status requestmu di halaman Request Status Checker. Terima kasih!\n_Job On Yours Marketing_";
     sendWhatsAppMessage(formObject.reqContact, reqMsg);
@@ -366,12 +389,12 @@ function getPICData() {
       { name: "Muhammad Ramadhani", nickname: "Dhani", phone: "6282325795876", email: "muhammadramadhani030909@gmail.com" }
     ],
     "cw": [
-      { name: "Sidik Permana", nickname: "Sidik", phone: "6285321200416", email: "sidiksipengelana@gmail.com" },
+      { name: "Benedict Jemima Cecilia Pietersz", nickname: "Ben", phone: "6282114887824", email: "bjcpietersz47@gmail.com" },
       { name: "Ridatasa Nadiawati", nickname: "Rida", phone: "6289656144248", email: "Ridatasa@gmail.com" },
+      { name: "Sidik Permana", nickname: "Sidik", phone: "6285321200416", email: "sidiksipengelana@gmail.com" },
       { name: "Sevia Rahmadani", nickname: "Via", phone: "6285709598764", email: "seviarahmadani9@gmail.com" },
       { name: "Mayang Anggraini", nickname: "Mayang", phone: "628812756505", email: "mayanganggraini242@gmail.com" },
-      { name: "Sri Rahayu Mulyaningsih", nickname: "Ayu", phone: "62895414845637", email: "srirahayuuu2937@gmail.com" },
-      { name: "Benedict Jemima Cecilia Pietersz", nickname: "Ben", phone: "6282114887824", email: "bjcpietersz47@gmail.com" }
+      { name: "Sri Rahayu Mulyaningsih", nickname: "Ayu", phone: "62895414845637", email: "srirahayuuu2937@gmail.com" }
     ],
     "cc": [],
     "cmo": [
