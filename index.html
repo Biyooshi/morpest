@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
   <script>
     tailwind.config = {
@@ -1388,86 +1388,6 @@
         container.style.display = 'block';
         container.className = 'max-h-[600px] overflow-y-auto pr-2';
         container.innerHTML = html;
-
-        // Force spacing on all wrapper divs after render untuk memastikan spacing
-        // CRITICAL: Gunakan multiple passes untuk memastikan SEMUA card mendapat spacing yang identik
-        setTimeout(function () {
-          // Pass 1: Target semua wrapper dengan class admin-card-wrapper dan set spacing
-          var wrappers = container.querySelectorAll('.admin-card-wrapper');
-
-          // Pastikan SEMUA wrapper div mendapat spacing yang identik tanpa exception
-          for (var i = 0; i < wrappers.length; i++) {
-            // CRITICAL: Set semua style properties dengan !important untuk memastikan tidak ada override
-            var styleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
-            wrappers[i].setAttribute('style', styleString);
-
-            // Pastikan card di dalam wrapper juga tidak memiliki margin yang bisa menyebabkan overlap
-            var card = wrappers[i].querySelector('.bg-white.border');
-            if (card) {
-              card.setAttribute('style', 'display: block !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding: 1rem !important;');
-            }
-          }
-
-          // Pass 2: Verifikasi dan force reset jika ada wrapper yang tidak mendapat spacing
-          setTimeout(function () {
-            var allWrappers = container.querySelectorAll('.admin-card-wrapper');
-            var styleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
-
-            // CRITICAL: Force reset SEMUA wrapper untuk memastikan spacing yang identik
-            for (var j = 0; j < allWrappers.length; j++) {
-              var wrapper = allWrappers[j];
-              var computedStyle = window.getComputedStyle(wrapper);
-              var marginBottom = parseFloat(computedStyle.marginBottom);
-              var marginTop = parseFloat(computedStyle.marginTop);
-
-              // Force reset SEMUA wrapper tanpa exception untuk memastikan spacing identik
-              wrapper.setAttribute('style', styleString);
-
-              // Verifikasi ulang setelah set
-              var afterStyle = window.getComputedStyle(wrapper);
-              var afterMarginBottom = parseFloat(afterStyle.marginBottom);
-              if (afterMarginBottom < 48) {
-                // Jika masih kurang, force sekali lagi dengan metode berbeda
-                wrapper.style.marginBottom = '3rem';
-                wrapper.style.marginTop = '0';
-                wrapper.style.paddingTop = '0';
-                wrapper.style.paddingBottom = '0';
-                wrapper.style.display = 'block';
-                wrapper.style.width = '100%';
-                wrapper.style.clear = 'both';
-                wrapper.style.minHeight = '1px';
-                wrapper.style.position = 'relative';
-                wrapper.style.boxSizing = 'border-box';
-                wrapper.style.float = 'none';
-              }
-            }
-
-            // Pass 3: Final verification dan force reset untuk SEMUA wrapper
-            setTimeout(function () {
-              var finalWrappers = container.querySelectorAll('.admin-card-wrapper');
-              var finalStyleString = 'margin-bottom: 3rem !important; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; display: block !important; width: 100% !important; clear: both !important; min-height: 1px !important; position: relative !important; box-sizing: border-box !important; float: none !important;';
-
-              // CRITICAL: Force reset SEMUA wrapper sekali lagi untuk memastikan tidak ada yang terlewat
-              for (var k = 0; k < finalWrappers.length; k++) {
-                var finalWrapper = finalWrappers[k];
-                finalWrapper.setAttribute('style', finalStyleString);
-
-                // Double-check dengan computed style
-                var finalComputed = window.getComputedStyle(finalWrapper);
-                var finalMarginBottom = parseFloat(finalComputed.marginBottom);
-
-                // Jika masih ada yang tidak mendapat spacing, gunakan inline style langsung
-                if (finalMarginBottom < 48) {
-                  finalWrapper.style.setProperty('margin-bottom', '3rem', 'important');
-                  finalWrapper.style.setProperty('margin-top', '0', 'important');
-                  finalWrapper.style.setProperty('display', 'block', 'important');
-                  finalWrapper.style.setProperty('width', '100%', 'important');
-                  finalWrapper.style.setProperty('clear', 'both', 'important');
-                }
-              }
-            }, 150);
-          }, 100);
-        }, 50);
       } else {
         container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-2"></i><p>Belum ada request</p></div>';
       }
@@ -1547,21 +1467,21 @@
 
         // Memastikan field-field spesifik ditampilkan
         if (jenis && jenis.indexOf && jenis.indexOf("SMS") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + '</div>';
           details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("GD") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Format:</strong> ' + escapeHtml(item.platform || '') + '</div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Format:</strong> ' + escapeHtml(item.format || '') + '</div>';
           details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan Desain:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CW") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Tone:</strong> ' + escapeHtml(item.toneVoice || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Audience:</strong> ' + escapeHtml(item.targetAudience || '') + '</div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Tone:</strong> ' + escapeHtml(item.tone || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Audience:</strong> ' + escapeHtml(item.audience || '') + '</div>';
           details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Brief Konten:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CC") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.platform || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
+          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
           details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Konsep Video:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
         }
 
-        if (item.refLink && item.refLink !== '-' && item.refLink !== '') {
-          details += '<div><strong class="text-gray-700 dark:text-gray-300">Referensi:</strong> <a href="' + escapeAttr(item.refLink) + '" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-link"></i> Buka Link</a></div>';
+        if (item.linkRef && item.linkRef !== '-' && item.linkRef !== '') {
+          details += '<div><strong class="text-gray-700 dark:text-gray-300">Referensi:</strong> <a href="' + escapeAttr(item.linkRef) + '" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-link"></i> Buka Link</a></div>';
         }
 
         return details || '<div class="text-gray-500 dark:text-gray-400 text-xs">No details available</div>';

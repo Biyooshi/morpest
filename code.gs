@@ -361,7 +361,9 @@ function getPICData() {
       { name: "Yusmita Alya Melanie", nickname: "Alya", phone: "6285792300256", email: "yusmitaalya@gmail.com" },
       { name: "Syafa Salsabila", nickname: "Syafa", phone: "62882003120378", email: "syafasalsabila226@gmail.com" },
       { name: "Lidia Siregar", nickname: "Lidia", phone: "6281316207014", email: "kembaroktober06@gmail.com" },
-      { name: "Mulqy Azzam", nickname: "Azzam", phone: "6281770094378", email: "mulqyazzam41@gmail.com" }
+      { name: "Mulqy Azzam", nickname: "Azzam", phone: "6281770094378", email: "mulqyazzam41@gmail.com" },
+      { name: "Fiorentina Auvillia Oenang", nickname: "Fio", phone: "6282181777228", email: "Fiorentinaauvillia3@gmail.com" },
+      { name: "Muhammad Ramadhani", nickname: "Dhani", phone: "6282325795876", email: "muhammadramadhani030909@gmail.com" }
     ],
     "cw": [
       { name: "Sidik Permana", nickname: "Sidik", phone: "6285321200416", email: "sidiksipengelana@gmail.com" },
