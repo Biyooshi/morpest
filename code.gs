@@ -857,7 +857,7 @@ function autoAssignAllPending() {
 // ============================================
 // API: Notifications (Email & WhatsApp)
 // ============================================
-var FONNTE_TOKEN = '9PkBs4SoEG15Qbw8mVBd';
+
 
 function sendEmailNotification(to, subject, bodyHtml, ccEmail) {
   try {
@@ -878,38 +878,227 @@ function sendEmailNotification(to, subject, bodyHtml, ccEmail) {
   }
 }
 
+// ============================================================
+// MORPEST - WHATSAPP QUEUE MODULE (ANTI-BAN)
+// ============================================================
+var WA_QUEUE_SHEET_NAME = 'WA Queue';
+var WA_TIMEZONE = 'Asia/Jakarta';
+ 
+// --- Konfigurasi Anti-Ban (silakan sesuaikan sesuai kebutuhan) ---
+var WA_CONFIG = {
+  BATCH_SIZE: 2,          // maksimal pesan yang dikirim per 1x trigger (per menit)
+  RATE_MAX: 12,           // maksimal pesan dalam satu window waktu
+  RATE_WINDOW_MIN: 10,    // panjang window rate limit (menit)
+  MIN_DELAY_MS: 6000,     // jeda acak minimum antar pesan dalam 1 batch (6 detik)
+  MAX_DELAY_MS: 18000,    // jeda acak maksimum antar pesan (18 detik)
+  QUIET_START_HOUR: 8,    // jam paling awal boleh mengirim (WIB)
+  QUIET_END_HOUR: 21,     // jam berhenti mengirim (WIB, 21 = sampai 20:59)
+  MAX_ATTEMPTS: 3         // maksimal percobaan sebelum pesan ditandai FAILED
+};
+ 
+// ============================================================
+// SHEET ANTREAN
+// ============================================================
+function getQueueSheet() {
+  var ss = getRequestSpreadsheet();
+  var sheet = ss.getSheetByName(WA_QUEUE_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(WA_QUEUE_SHEET_NAME);
+    sheet.appendRow(['QueueID', 'AddedAt', 'Target', 'Message', 'Status', 'Attempts', 'SentAt', 'Note']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+ 
+// ============================================================
+// PENGGANTI sendWhatsAppMessage LAMA
+// ============================================================
 function sendWhatsAppMessage(targetNumber, message) {
-  if (!targetNumber || targetNumber === "-") return false;
+  if (!targetNumber || targetNumber.toString().trim() === '' || targetNumber === '-') return false;
   try {
     var cleanNumber = targetNumber.toString().replace(/\D/g, '');
-    if (cleanNumber.startsWith('0')) {
+    if (cleanNumber.charAt(0) === '0') {
       cleanNumber = '62' + cleanNumber.substring(1);
     }
+    if (cleanNumber.length < 9) return false;
+ 
+    var sheet = getQueueSheet();
+    var lastRow = sheet.getLastRow();
     
-    var url = "https://api.fonnte.com/send";
-    var payloadObj = {
-      "target": cleanNumber,
-      "message": message,
-      "delay": "2"
-    };
-    
-    var options = {
-      "method": "post",
-      "headers": {
-        "Authorization": FONNTE_TOKEN,
-        "Content-Type": "application/json"
-      },
-      "payload": JSON.stringify(payloadObj),
-      "muteHttpExceptions": true
-    };
-    
-    var response = UrlFetchApp.fetch(url, options);
-    Logger.log("WA Response: " + response.getContentText());
-    
+    // Cek duplikasi antrean (pesan persis sama ke nomor sama yang masih PENDING)
+    if (lastRow > 1) {
+      var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+      for (var i = data.length - 1; i >= 0; i--) {
+        if (data[i][4] === 'PENDING' && data[i][2] == cleanNumber && data[i][3] === message) {
+          Logger.log('Duplicate message avoided for ' + cleanNumber);
+          return true; // Anggap berhasil masuk antrean
+        }
+      }
+    }
+
+    var queueId = 'Q' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
+    sheet.appendRow([queueId, new Date(), cleanNumber, message, 'PENDING', 0, '', '']);
     return true;
-  } catch(e) {
-    Logger.log("WA Error: " + e.toString());
+  } catch (e) {
+    Logger.log('Enqueue Error: ' + e.toString());
     return false;
+  }
+}
+ 
+// ============================================================
+// WORKER: dipanggil otomatis oleh trigger tiap 1 menit
+// ============================================================
+function processWhatsAppQueue() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return;
+ 
+  try {
+    var now = new Date();
+ 
+    var hour = parseInt(Utilities.formatDate(now, WA_TIMEZONE, 'H'), 10);
+    if (hour < WA_CONFIG.QUIET_START_HOUR || hour >= WA_CONFIG.QUIET_END_HOUR) {
+      return;
+    }
+ 
+    var sheet = getQueueSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return;
+ 
+    var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+ 
+    var windowStart = new Date(now.getTime() - WA_CONFIG.RATE_WINDOW_MIN * 60 * 1000);
+    var sentInWindow = 0;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][4] === 'SENT' && data[i][6] instanceof Date && data[i][6] >= windowStart) {
+        sentInWindow++;
+      }
+    }
+    var slots = WA_CONFIG.RATE_MAX - sentInWindow;
+    if (slots <= 0) return;
+ 
+    var toSend = Math.min(WA_CONFIG.BATCH_SIZE, slots);
+    var sentThisRun = 0;
+ 
+    for (var r = 0; r < data.length && sentThisRun < toSend; r++) {
+      var status = data[r][4];
+      if (status !== 'PENDING') continue;
+ 
+      var attempts = data[r][5] || 0;
+      if (attempts >= WA_CONFIG.MAX_ATTEMPTS) {
+        sheet.getRange(r + 2, 5).setValue('FAILED');
+        continue;
+      }
+ 
+      var target = data[r][2];
+      var message = data[r][3];
+ 
+      if (sentThisRun > 0) {
+        var delayMs = WA_CONFIG.MIN_DELAY_MS +
+          Math.floor(Math.random() * (WA_CONFIG.MAX_DELAY_MS - WA_CONFIG.MIN_DELAY_MS));
+        Utilities.sleep(delayMs);
+      }
+ 
+      var result = fonnteSend(target, message);
+ 
+      if (result.ok) {
+        sheet.getRange(r + 2, 5).setValue('SENT');
+        sheet.getRange(r + 2, 7).setValue(new Date());
+        sheet.getRange(r + 2, 8).setValue(result.note);
+        sentThisRun++;
+      } else {
+        var newAttempts = attempts + 1;
+        sheet.getRange(r + 2, 6).setValue(newAttempts);
+        sheet.getRange(r + 2, 8).setValue(result.note);
+        if (newAttempts >= WA_CONFIG.MAX_ATTEMPTS) {
+          sheet.getRange(r + 2, 5).setValue('FAILED');
+        }
+      }
+    }
+  } catch (e) {
+    Logger.log('Queue Worker Error: ' + e.toString());
+  } finally {
+    lock.releaseLock();
+  }
+}
+ 
+// ============================================================
+// PENGIRIM AKTUAL KE FONNTE (dipanggil hanya oleh worker)
+// ============================================================
+function fonnteSend(cleanNumber, message) {
+  try {
+    var fonnteToken = PropertiesService.getScriptProperties().getProperty('FONNTE_TOKEN');
+    if (!fonnteToken) {
+        return { ok: false, note: 'FONNTE_TOKEN is not set in Script Properties' };
+    }
+
+    var url = 'https://api.fonnte.com/send';
+    var payloadObj = {
+      'target': cleanNumber,
+      'message': message,
+      'delay': String(2 + Math.floor(Math.random() * 4))
+    };
+    var options = {
+      'method': 'post',
+      'headers': {
+        'Authorization': fonnteToken,
+        'Content-Type': 'application/json'
+      },
+      'payload': JSON.stringify(payloadObj),
+      'muteHttpExceptions': true
+    };
+    var response = UrlFetchApp.fetch(url, options);
+    var code = response.getResponseCode();
+    var text = response.getContentText();
+ 
+    var ok = false;
+    try {
+      var json = JSON.parse(text);
+      ok = (code === 200 && json.status === true);
+    } catch (pe) {
+      ok = false;
+    }
+    return { ok: ok, note: 'HTTP ' + code + ' | ' + text.substring(0, 180) };
+  } catch (e) {
+    return { ok: false, note: e.toString() };
+  }
+}
+ 
+// ============================================================
+// SETUP: jalankan SATU KALI dari editor Apps Script
+// ============================================================
+function setupWhatsAppQueue() {
+  getQueueSheet();
+ 
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'processWhatsAppQueue') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+ 
+  ScriptApp.newTrigger('processWhatsAppQueue')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+ 
+  Logger.log('Setup WA Queue selesai. Worker akan berjalan tiap 1 menit.');
+}
+ 
+// ============================================================
+// (OPSIONAL) Bersihkan log SENT yang lebih tua dari 3 hari
+// ============================================================
+function cleanupWhatsAppQueue() {
+  var sheet = getQueueSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+ 
+  var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  var cutoff = new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000);
+ 
+  for (var r = data.length - 1; r >= 0; r--) {
+    if (data[r][4] === 'SENT' && data[r][6] instanceof Date && data[r][6] < cutoff) {
+      sheet.deleteRow(r + 2);
+    }
   }
 }
 
