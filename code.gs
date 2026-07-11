@@ -55,7 +55,7 @@ function doPost(e) {
     } else if (func === "autoAssignAllPending") {
       result = autoAssignAllPending();
     } else if (func === "verifyRequestForEdit") {
-      result = verifyRequestForEdit(params[0], params[1], params[2], params[3]);
+      result = verifyRequestForEdit(params[0], params[1], params[2]);
     } else if (func === "updateRequestByUser") {
       result = updateRequestByUser(params[0]);
     } else {
@@ -1151,5 +1151,136 @@ function checkDuplicateRequest(name, position) {
     return { found: false };
   } catch(e) {
     return { found: false, error: e.toString() };
+  }
+}
+
+// ============================================
+// API: Verify Request For Edit
+// ============================================
+function verifyRequestForEdit(ticketId, name, wa) {
+  try {
+    var sheet = getRequestSheet();
+    if (!sheet) return { success: false, message: "Sheet not found" };
+    
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][0].toString() === ticketId) {
+        var status = (data[i][17] || "Pending").toString().trim();
+        if (status !== "Pending") {
+          return { success: false, message: "Request tidak bisa diedit karena status sudah " + status };
+        }
+        
+        var reqName = (data[i][2] || "").toString().trim().toLowerCase();
+        var reqWa = (data[i][4] || "").toString().trim();
+        var cleanReqWa = reqWa.replace(/\D/g, '');
+        var cleanWa = wa.toString().trim().replace(/\D/g, '');
+        
+        if (reqName === name.toString().trim().toLowerCase() && cleanReqWa === cleanWa) {
+          var formData = {
+            ticketId: data[i][0],
+            reqName: data[i][2],
+            reqNickname: data[i][3],
+            reqContact: data[i][4],
+            reqPosition: data[i][5],
+            reqPriority: data[i][6],
+            requestType: data[i][7],
+            reqDeadline: data[i][8],
+            reqTitle: data[i][9],
+            reqLink: data[i][11],
+            reqEmail: data[i][16]
+          };
+          
+          var type = data[i][7].toString().toLowerCase();
+          if (type.indexOf("sms") >= 0 || type.indexOf("upload konten") >= 0) {
+            formData.smsBrief = data[i][10];
+            formData.smsFormat = data[i][12];
+          } else if (type.indexOf("gd") >= 0 || type.indexOf("design") >= 0) {
+            formData.gdBrief = data[i][10];
+            formData.gdFormat = data[i][12];
+          } else if (type.indexOf("cw") >= 0 || type.indexOf("caption") >= 0) {
+            formData.cwBrief = data[i][10];
+            formData.cwTone = data[i][13];
+            formData.cwAudience = data[i][14];
+          } else if (type.indexOf("cc") >= 0 || type.indexOf("video") >= 0) {
+            formData.ccBrief = data[i][10];
+            formData.ccFormat = data[i][12];
+            formData.ccDuration = data[i][15];
+          }
+          return { success: true, data: formData };
+        } else {
+          return { success: false, message: "Data verifikasi tidak cocok. Pastikan Nama Lengkap dan Nomor WA sama persis dengan saat submit tiket awal." };
+        }
+      }
+    }
+    return { success: false, message: "Ticket ID tidak ditemukan" };
+  } catch(e) {
+    return { success: false, message: e.toString() };
+  }
+}
+
+// ============================================
+// API: Update Request By User
+// ============================================
+function updateRequestByUser(formObject) {
+  try {
+    var ticketId = formObject.editTicketId;
+    if (!ticketId) return { success: false, message: "Ticket ID tidak ditemukan" };
+    
+    var sheet = getRequestSheet();
+    if (!sheet) return { success: false, message: "Sheet not found" };
+    
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][0].toString() === ticketId) {
+        var status = (data[i][17] || "Pending").toString().trim();
+        if (status !== "Pending") {
+          return { success: false, message: "Request tidak bisa diedit karena status sudah " + status };
+        }
+        
+        var jenisRequest = formObject.requestType || data[i][7];
+        var finalBrief = "-";
+        var formatOrPlatform = "-";
+        var toneVoice = "-";
+        var targetAudience = "-";
+        var duration = "-";
+
+        if (jenisRequest.indexOf("upload konten") >= 0 || jenisRequest.indexOf("SMS") >= 0) {
+          finalBrief = formObject.smsArahan || "-";
+          formatOrPlatform = formObject.smsFormat || "-"; // smsFormat is used in formObject
+        } else if (jenisRequest.indexOf("Request Design") >= 0 || jenisRequest.indexOf("GD") >= 0) {
+          finalBrief = formObject.gdArahan || "-";
+          formatOrPlatform = formObject.gdFormat || "-";
+        } else if (jenisRequest.indexOf("Penulisan Caption") >= 0 || jenisRequest.indexOf("CW") >= 0) {
+          finalBrief = formObject.cwArahan || "-";
+          toneVoice = formObject.cwTone || "-";
+          targetAudience = formObject.cwAudience || "-";
+        } else if (jenisRequest.indexOf("konten video") >= 0 || jenisRequest.indexOf("CC") >= 0) {
+          finalBrief = formObject.ccArahan || "-";
+          formatOrPlatform = formObject.ccFormat || "-"; // ccFormat is used in formObject
+          duration = formObject.ccDuration || "-";
+        }
+
+        sheet.getRange(i + 1, 3).setValue(formObject.reqName || "-");
+        sheet.getRange(i + 1, 4).setValue(formObject.reqNickname || "-");
+        sheet.getRange(i + 1, 5).setValue(formObject.reqContact || "-");
+        sheet.getRange(i + 1, 6).setValue(formObject.reqPosition || "-");
+        sheet.getRange(i + 1, 7).setValue(formObject.reqPriority || "-");
+        sheet.getRange(i + 1, 8).setValue(jenisRequest);
+        sheet.getRange(i + 1, 9).setValue(formObject.reqDeadline || "-");
+        sheet.getRange(i + 1, 10).setValue(formObject.reqTitle || "-");
+        sheet.getRange(i + 1, 11).setValue(finalBrief);
+        sheet.getRange(i + 1, 12).setValue(formObject.reqLink || "-");
+        sheet.getRange(i + 1, 13).setValue(formatOrPlatform);
+        sheet.getRange(i + 1, 14).setValue(toneVoice);
+        sheet.getRange(i + 1, 15).setValue(targetAudience);
+        sheet.getRange(i + 1, 16).setValue(duration);
+        sheet.getRange(i + 1, 17).setValue(formObject.reqEmail || "-");
+        
+        return { status: "success", message: "Request berhasil diupdate", ticketId: ticketId };
+      }
+    }
+    return { success: false, message: "Ticket ID tidak ditemukan" };
+  } catch(e) {
+    return { success: false, message: e.toString() };
   }
 }
