@@ -54,6 +54,10 @@ function doPost(e) {
       result = checkDuplicateRequest(params[0], params[1]);
     } else if (func === "autoAssignAllPending") {
       result = autoAssignAllPending();
+    } else if (func === "verifyRequestForEdit") {
+      result = verifyRequestForEdit(params[0], params[1], params[2], params[3]);
+    } else if (func === "updateRequestByUser") {
+      result = updateRequestByUser(params[0]);
     } else {
       result = { error: "Function not found" };
     }
@@ -183,10 +187,10 @@ function processForm(formObject) {
     SpreadsheetApp.flush();
     
     // --- SEND NOTIFICATIONS ---
-    var adminMsg = "*NEW REQUEST MORPEST*\n\nTicket ID: " + ticketId + "\nDari: " + (formObject.reqName || "-") + " (" + (formObject.reqPosition || "-") + ")\nJudul: " + (formObject.reqTitle || "-") + "\nJenis: " + jenisRequest + "\nDeadline: " + (formObject.reqDeadline || "-") + "\n\nHarap segera di-assign ke PIC yang bertugas.";
+    var adminMsg = "*NEW REQUEST MORPEST* 📣\n\nTicket ID: " + ticketId + "\nDari: " + (formObject.reqName || "-") + " (" + (formObject.reqPosition || "-") + ")\nJudul: " + (formObject.reqTitle || "-") + "\nJenis: " + jenisRequest + "\nDeadline: " + (formObject.reqDeadline || "-") + "\n\nHarap segera di-assign ke PIC yang bertugas. 🚀";
     
     // 1. Notify CMO (Default)
-    sendWhatsAppMessage("6285233142178", adminMsg); // Admin Obi
+    sendWhatsAppMessage("6285233142178", adminMsg, "Admin Obi", "Obi", "CMO"); // Admin Obi
     sendEmailNotification("qolbimuhammad00@gmail.com", "New Request: " + ticketId, adminMsg.replace(/\n/g, '<br>')); // CMO gets explicit admin email
     
     // 2. Notify Head & Co-Head based on division
@@ -194,24 +198,24 @@ function processForm(formObject) {
     var jr = jenisRequest.toLowerCase();
     
     if (jr.indexOf("upload konten") >= 0 || jr.indexOf("sms") >= 0) {
-      divisionNotifTargets.push({ name: "Riska Stephanie", phone: "62895352730008", email: "riskastphnie28@gmail.com" });
-      divisionNotifTargets.push({ name: "Naya Azani", phone: "62895391527014", email: "nayaazani13@gmail.com" });
+      divisionNotifTargets.push({ name: "Riska Stephanie", nickname: "Riska", phone: "62895352730008", email: "riskastphnie28@gmail.com", position: "Head SMS" });
+      divisionNotifTargets.push({ name: "Naya Azani", nickname: "Naya", phone: "62895391527014", email: "nayaazani13@gmail.com", position: "Co-Head SMS" });
     } else if (jr.indexOf("request design") >= 0 || jr.indexOf("gd") >= 0) {
-      divisionNotifTargets.push({ name: "Fanisa Aulia Nur Hakmalia", phone: "6281357557510", email: "fanisaanh@gmail.com" });
-      divisionNotifTargets.push({ name: "Dita Dara", phone: "6289665060586", email: "dd.is.ditadara@gmail.com" });
+      divisionNotifTargets.push({ name: "Fanisa Aulia Nur Hakmalia", nickname: "Fanisa", phone: "6281357557510", email: "fanisaanh@gmail.com", position: "Head GD" });
+      divisionNotifTargets.push({ name: "Dita Dara", nickname: "Dita", phone: "6289665060586", email: "dd.is.ditadara@gmail.com", position: "Co-Head GD" });
     } else if (jr.indexOf("penulisan caption") >= 0 || jr.indexOf("cw") >= 0) {
-      divisionNotifTargets.push({ name: "Benedict Jemima Cecilia Pietersz", phone: "6282114887824", email: "bjcpietersz47@gmail.com" });
-      divisionNotifTargets.push({ name: "Ridatasa Nadiawati", phone: "6289656144248", email: "Ridatasa@gmail.com" });
+      divisionNotifTargets.push({ name: "Benedict Jemima Cecilia Pietersz", nickname: "Mima", phone: "6282114887824", email: "bjcpietersz47@gmail.com", position: "Head CW" });
+      divisionNotifTargets.push({ name: "Ridatasa Nadiawati", nickname: "Rida", phone: "6289656144248", email: "Ridatasa@gmail.com", position: "Co-Head CW" });
     }
     
     for (var n = 0; n < divisionNotifTargets.length; n++) {
       var target = divisionNotifTargets[n];
-      sendWhatsAppMessage(target.phone, adminMsg);
+      sendWhatsAppMessage(target.phone, adminMsg, target.name, target.nickname, target.position);
       sendEmailNotification(target.email, "New Request Divisi: " + ticketId, adminMsg.replace(/\n/g, '<br>'));
     }
     
-    var reqMsg = "*REQUEST BERHASIL DIBUAT*\n\nHalo " + (formObject.reqNickname || "-") + ",\nRequest kamu dengan judul *" + (formObject.reqTitle || "-") + "* telah diterima.\nTicket ID: *" + ticketId + "*\n\nKamu dapat mengecek status requestmu di halaman Request Status Checker. Terima kasih!\n_Job On Yours Marketing_";
-    sendWhatsAppMessage(formObject.reqContact, reqMsg);
+    var reqMsg = "*REQUEST BERHASIL DIBUAT* 🎉\n\nHalo " + (formObject.reqNickname || "-") + ", ini Morpest-bot! 🤖\n\nRequest kamu dengan judul *" + (formObject.reqTitle || "-") + "* telah diterima.\nTicket ID: *" + ticketId + "*\n\nKamu dapat mengecek status requestmu di halaman Request Status Checker. Terima kasih!\n_Job On Yours Marketing_";
+    sendWhatsAppMessage(formObject.reqContact, reqMsg, formObject.reqName, formObject.reqNickname, formObject.reqPosition);
     if (formObject.reqEmail) {
       sendEmailNotification(formObject.reqEmail, "Request Berhasil Dibuat: " + ticketId, reqMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
     }
@@ -260,6 +264,7 @@ function checkRequestStatus(ticketId) {
           requester: data[i][2] || "-",
           reqContact: data[i][4] || "-",
           pic: data[i][18] || "Belum di-assign",
+          picWA: data[i][19] || "-",
           deadline: Utilities.formatDate(new Date(data[i][8]), ss.getSpreadsheetTimeZone(), "dd MMM yyyy"),
           linkResult: data[i][20] || ""
         };
@@ -501,8 +506,8 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
         
         // Notify Requester and Admin on status change
         if (newStatus !== oldStatus && newStatus === "Done") {
-           var doneMsg = "*REQUEST SELESAI*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") telah selesai dikerjakan!\n\nLink Hasil: " + (finalLinkVal || "-") + "\n\nTerima kasih,\n_Job On Yours Marketing_";
-           sendWhatsAppMessage(reqContact, doneMsg);
+           var doneMsg = "*REQUEST SELESAI* ✅\n\nHalo " + reqName + ", ini Morpest-bot! 🤖\n\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") telah selesai dikerjakan!\n\nLink Hasil: " + (finalLinkVal || "-") + "\n\nTerima kasih,\n_Job On Yours Marketing_";
+           sendWhatsAppMessage(reqContact, doneMsg, reqName, "-", "-");
            if (reqEmail && reqEmail !== "-") {
              sendEmailNotification(reqEmail, "Request Selesai: " + ticketId, doneMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
            } else {
@@ -517,8 +522,8 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
               }
            }
         } else if (newStatus !== oldStatus && newStatus === "On Process") {
-           var procMsg = "*REQUEST DIPROSES*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picVal + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
-           sendWhatsAppMessage(reqContact, procMsg);
+           var procMsg = "*REQUEST DIPROSES* ⏳\n\nHalo " + reqName + ", ini Morpest-bot! 🤖\n\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picVal + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
+           sendWhatsAppMessage(reqContact, procMsg, reqName, "-", "-");
            if (reqEmail && reqEmail !== "-") {
              sendEmailNotification(reqEmail, "Request Diproses: " + ticketId, procMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
            } else {
@@ -528,8 +533,8 @@ function updateTicketData(ticketId, picName, picContact, status, finalLink) {
            if (picVal) {
               var picInfo = getPICInfo(picVal);
               if (picInfo) {
-                 var picMsg = "Halo " + picInfo.nickname + ",\nKamu telah ditugaskan untuk mengerjakan *" + reqTitle + "* (Ticket: " + ticketId + ").\nMohon segera dikerjakan sesuai deadline.";
-                 sendWhatsAppMessage(picInfo.phone, picMsg);
+                 var picMsg = "Halo " + picInfo.nickname + ", ini Morpest-bot! 🤖\n\nKamu telah ditugaskan untuk mengerjakan *" + reqTitle + "* (Ticket: " + ticketId + ").\nMohon segera dikerjakan sesuai deadline. 🎯";
+                 sendWhatsAppMessage(picInfo.phone, picMsg, picInfo.name, picInfo.nickname, "Marketing PIC");
                  if (picInfo.email) {
                     sendEmailNotification(picInfo.email, "Tugas Baru: " + ticketId, picMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
                  }
@@ -826,14 +831,14 @@ function autoAssignAllPending() {
       sheet.getRange(i + 1, 18).setValue("On Process");
 
       // Kirim notifikasi ke PIC yang ditugaskan
-      var picMsg = "*TUGAS BARU - MORPEST*\n\nHalo " + picNick + ",\nKamu telah di-assign secara otomatis untuk mengerjakan request berikut:\n\nTicket ID: *" + ticketId + "*\nJudul: *" + reqTitle + "*\nJenis: " + row[7] + "\nDeadline: " + (row[8] ? Utilities.formatDate(new Date(row[8]), getRequestSpreadsheet().getSpreadsheetTimeZone(), "dd MMM yyyy") : "-") + "\n\nMohon segera dikerjakan sesuai deadline!\n_Job On Yours Marketing_";
+      var picMsg = "*TUGAS BARU - MORPEST* 🎯\n\nHalo " + picNick + ", ini Morpest-bot! 🤖\n\nKamu telah di-assign secara otomatis untuk mengerjakan request berikut:\n\nTicket ID: *" + ticketId + "*\nJudul: *" + reqTitle + "*\nJenis: " + row[7] + "\nDeadline: " + (row[8] ? Utilities.formatDate(new Date(row[8]), getRequestSpreadsheet().getSpreadsheetTimeZone(), "dd MMM yyyy") : "-") + "\n\nMohon segera dikerjakan sesuai deadline!\n_Job On Yours Marketing_";
 
-      if (picPhone) sendWhatsAppMessage(picPhone, picMsg);
+      if (picPhone) sendWhatsAppMessage(picPhone, picMsg, picName, picNick, "Marketing PIC");
       if (picEmail) sendEmailNotification(picEmail, "Tugas Baru (Auto Assign): " + ticketId, picMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
 
       // Kirim notifikasi ke requester bahwa request sedang diproses
-      var reqMsg = "*REQUEST DIPROSES*\n\nHalo " + reqName + ",\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picName + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
-      if (reqContact) sendWhatsAppMessage(reqContact, reqMsg);
+      var reqMsg = "*REQUEST DIPROSES* ⏳\n\nHalo " + reqName + ", ini Morpest-bot! 🤖\n\nRequest kamu *" + reqTitle + "* (Ticket: " + ticketId + ") saat ini sedang dikerjakan oleh PIC: *" + picName + "*.\n\nHarap ditunggu hasilnya!\n_Job On Yours Marketing_";
+      if (reqContact) sendWhatsAppMessage(reqContact, reqMsg, reqName, "-", "-");
       if (reqEmail && reqEmail !== "-") sendEmailNotification(reqEmail, "Request Diproses: " + ticketId, reqMsg.replace(/\n/g, '<br>'), "qolbimuhammad00@gmail.com");
 
       assigned++;
@@ -904,7 +909,7 @@ function getQueueSheet() {
   var sheet = ss.getSheetByName(WA_QUEUE_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(WA_QUEUE_SHEET_NAME);
-    sheet.appendRow(['QueueID', 'AddedAt', 'Target', 'Message', 'Status', 'Attempts', 'SentAt', 'Note']);
+    sheet.appendRow(['QueueID', 'AddedAt', 'Target', 'Name', 'Nickname', 'Position', 'Message', 'Status', 'Attempts', 'SentAt', 'Note']);
     sheet.setFrozenRows(1);
   }
   return sheet;
@@ -913,7 +918,7 @@ function getQueueSheet() {
 // ============================================================
 // PENGGANTI sendWhatsAppMessage LAMA
 // ============================================================
-function sendWhatsAppMessage(targetNumber, message) {
+function sendWhatsAppMessage(targetNumber, message, reqName, reqNick, reqPosition) {
   if (!targetNumber || targetNumber.toString().trim() === '' || targetNumber === '-') return false;
   try {
     var cleanNumber = targetNumber.toString().replace(/\D/g, '');
@@ -927,9 +932,9 @@ function sendWhatsAppMessage(targetNumber, message) {
     
     // Cek duplikasi antrean (pesan persis sama ke nomor sama yang masih PENDING)
     if (lastRow > 1) {
-      var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+      var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
       for (var i = data.length - 1; i >= 0; i--) {
-        if (data[i][4] === 'PENDING' && data[i][2] == cleanNumber && data[i][3] === message) {
+        if (data[i][7] === 'PENDING' && data[i][2] == cleanNumber && data[i][6] === message) {
           Logger.log('Duplicate message avoided for ' + cleanNumber);
           return true; // Anggap berhasil masuk antrean
         }
@@ -937,7 +942,7 @@ function sendWhatsAppMessage(targetNumber, message) {
     }
 
     var queueId = 'Q' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
-    sheet.appendRow([queueId, new Date(), cleanNumber, message, 'PENDING', 0, '', '']);
+    sheet.appendRow([queueId, new Date(), cleanNumber, reqName || "-", reqNick || "-", reqPosition || "-", message, 'PENDING', 0, '', '']);
     return true;
   } catch (e) {
     Logger.log('Enqueue Error: ' + e.toString());
@@ -964,12 +969,12 @@ function processWhatsAppQueue() {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return;
  
-    var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
  
     var windowStart = new Date(now.getTime() - WA_CONFIG.RATE_WINDOW_MIN * 60 * 1000);
     var sentInWindow = 0;
     for (var i = 0; i < data.length; i++) {
-      if (data[i][4] === 'SENT' && data[i][6] instanceof Date && data[i][6] >= windowStart) {
+      if (data[i][7] === 'SENT' && data[i][9] instanceof Date && data[i][9] >= windowStart) {
         sentInWindow++;
       }
     }
@@ -980,17 +985,17 @@ function processWhatsAppQueue() {
     var sentThisRun = 0;
  
     for (var r = 0; r < data.length && sentThisRun < toSend; r++) {
-      var status = data[r][4];
+      var status = data[r][7];
       if (status !== 'PENDING') continue;
  
-      var attempts = data[r][5] || 0;
+      var attempts = data[r][8] || 0;
       if (attempts >= WA_CONFIG.MAX_ATTEMPTS) {
-        sheet.getRange(r + 2, 5).setValue('FAILED');
+        sheet.getRange(r + 2, 8).setValue('FAILED');
         continue;
       }
  
       var target = data[r][2];
-      var message = data[r][3];
+      var message = data[r][6];
  
       if (sentThisRun > 0) {
         var delayMs = WA_CONFIG.MIN_DELAY_MS +
@@ -1001,16 +1006,16 @@ function processWhatsAppQueue() {
       var result = fonnteSend(target, message);
  
       if (result.ok) {
-        sheet.getRange(r + 2, 5).setValue('SENT');
-        sheet.getRange(r + 2, 7).setValue(new Date());
-        sheet.getRange(r + 2, 8).setValue(result.note);
+        sheet.getRange(r + 2, 8).setValue('SENT');
+        sheet.getRange(r + 2, 10).setValue(new Date());
+        sheet.getRange(r + 2, 11).setValue(result.note);
         sentThisRun++;
       } else {
         var newAttempts = attempts + 1;
-        sheet.getRange(r + 2, 6).setValue(newAttempts);
-        sheet.getRange(r + 2, 8).setValue(result.note);
+        sheet.getRange(r + 2, 9).setValue(newAttempts);
+        sheet.getRange(r + 2, 11).setValue(result.note);
         if (newAttempts >= WA_CONFIG.MAX_ATTEMPTS) {
-          sheet.getRange(r + 2, 5).setValue('FAILED');
+          sheet.getRange(r + 2, 8).setValue('FAILED');
         }
       }
     }
@@ -1092,11 +1097,11 @@ function cleanupWhatsAppQueue() {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return;
  
-  var data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
   var cutoff = new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000);
  
   for (var r = data.length - 1; r >= 0; r--) {
-    if (data[r][4] === 'SENT' && data[r][6] instanceof Date && data[r][6] < cutoff) {
+    if (data[r][7] === 'SENT' && data[r][9] instanceof Date && data[r][9] < cutoff) {
       sheet.deleteRow(r + 2);
     }
   }

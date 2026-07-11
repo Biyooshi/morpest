@@ -5,6 +5,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="favicon-joy.png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -257,6 +258,7 @@
         </div>
 
         <form id="mainForm" onsubmit="submitForm(event)">
+          <input type="hidden" name="editTicketIdField" id="editTicketIdField" value="">
           <div class="mb-6 border-b pb-4">
             <h3 class="text-orange-500 font-bold mb-3">1. Identitas</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -316,12 +318,18 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <select name="reqPriority" required class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <select name="reqPriority" id="reqPriority" required onchange="checkPriority()" class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="" disabled selected>Pilih tingkat urgensi requestmu</option>
                     <option value="Low Priority (H-7+)">Low Priority (H-7+)</option>
                     <option value="Medium Priority (H-3)">Medium Priority (H-3)</option>
                     <option value="High Priority / Urgent (H-1)">High Priority / Urgent (H-1)</option>
                   </select>
+                  <div id="h1ConfirmContainer" class="hidden mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <label class="flex items-start gap-2 cursor-pointer text-sm text-red-800 dark:text-red-300">
+                      <input type="checkbox" id="h1Confirm" name="h1Confirm" class="mt-1">
+                      <span>Saya sudah konfirmasi ke Head & Co-Head terkait permohonan H-1 ini.</span>
+                    </label>
+                  </div>
                 </div>
                 <input type="date" name="reqDeadline" required class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
               </div>
@@ -522,8 +530,11 @@
             <i class="fas fa-search mr-2"></i>Cek Status Request
           </h2>
           <div class="flex gap-2 mb-6">
-            <input type="text" id="trackId" placeholder="MKT-XXXX"
-              class="flex-1 border p-3 rounded-lg text-center uppercase font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+            <div class="flex-1 flex items-center border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 overflow-hidden">
+              <span class="pl-3 py-3 text-gray-500 font-mono font-bold">MKT-</span>
+              <input type="number" id="trackId" placeholder="1001"
+                class="flex-1 p-3 outline-none text-left font-mono bg-transparent dark:text-white dark:placeholder-gray-400 w-full">
+            </div>
             <button onclick="trackTicket()" class="bg-blue-800 text-white px-5 rounded-lg hover:bg-blue-900">
               <i class="fas fa-search"></i>
             </button>
@@ -550,16 +561,44 @@
                 <span class="block text-xs text-gray-400">Deadline</span>
                 <span id="resultDeadline" class="font-medium"></span>
               </div>
+              <div class="col-span-2 mt-2">
+                <span class="block text-xs text-gray-400">No. WA PIC</span>
+                <span id="resultPICWA" class="font-medium"></span>
+              </div>
             </div>
 
-            <div id="boxResultLink" class="hidden bg-green-50 p-3 rounded border border-green-200 text-center">
+            <div id="boxResultLink" class="hidden bg-green-50 p-3 rounded border border-green-200 text-center mb-4">
               <a id="resLink" href="#" target="_blank" class="text-green-700 font-bold text-sm hover:underline">
                 <i class="fas fa-download mr-1"></i> Download Hasil
               </a>
             </div>
+
+            <button type="button" onclick="openEditModal()" id="btnEditRequest" class="w-full bg-yellow-500 text-white py-2 rounded font-bold hover:bg-yellow-600 transition-colors">
+              <i class="fas fa-edit mr-1"></i> Edit Request
+            </button>
           </div>
 
           <div id="trackError" class="hidden text-center text-red-500 text-sm mt-4"></div>
+        </div>
+      </div>
+
+      <!-- MODAL VERIFIKASI EDIT -->
+      <div id="editVerificationModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-xl relative">
+          <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <i class="fas fa-times"></i>
+          </button>
+          <h3 class="font-bold text-xl mb-2 text-blue-800 dark:text-blue-400">Verifikasi Edit Request</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Demi keamanan, silakan isi data diri yang sama dengan saat kamu submit tiket <span id="editTicketIdDisplay" class="font-bold"></span>.</p>
+          <div class="space-y-3">
+            <input type="text" id="verifyName" placeholder="Nama Lengkap" class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+            <input type="text" id="verifyNickname" placeholder="Nama Panggilan" class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+            <input type="number" id="verifyWA" placeholder="Nomor WA (contoh: 6281234...)" class="border p-3 rounded-lg w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+            <button onclick="verifyAndEdit()" id="btnVerifyEdit" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 mt-2">
+              <i class="fas fa-lock mr-2"></i>Verifikasi & Edit
+            </button>
+            <div id="verifyError" class="hidden text-red-500 text-xs text-center mt-2"></div>
+          </div>
         </div>
       </div>
 
@@ -851,6 +890,21 @@
       }
     }
 
+    // Logic Priority H-1 Checkbox
+    function checkPriority() {
+      var p = document.getElementById('reqPriority').value;
+      var c = document.getElementById('h1ConfirmContainer');
+      var cb = document.getElementById('h1Confirm');
+      if (p === 'High Priority / Urgent (H-1)') {
+        c.classList.remove('hidden');
+        cb.required = true;
+      } else {
+        c.classList.add('hidden');
+        cb.required = false;
+        cb.checked = false;
+      }
+    }
+
     // Form submission
     function submitForm(event) {
       event.preventDefault();
@@ -870,9 +924,13 @@
         }
       }
 
+      var editTicketId = document.getElementById('editTicketIdField') ? document.getElementById('editTicketIdField').value : '';
+      var targetFunction = editTicketId ? "updateRequestByUser" : "processForm";
+      if (editTicketId) formData.editTicketId = editTicketId;
+
       fetch(GAS_API_URL, {
         method: "POST",
-        body: JSON.stringify({ function: "processForm", parameters: [formData] })
+        body: JSON.stringify({ function: targetFunction, parameters: [formData] })
       })
       .then(resp => resp.json())
       .then(data => handleFormSuccess(data))
@@ -905,9 +963,10 @@
 
     // Tracking function
     function trackTicket() {
-      var ticketId = document.getElementById('trackId').value.trim();
-      if (!ticketId) {
-        alert('Masukkan Ticket ID!');
+      var trackInputValue = document.getElementById('trackId').value.trim();
+      var ticketId = trackInputValue ? "MKT-" + trackInputValue : "";
+      if (!trackInputValue) {
+        alert('Masukkan angka Ticket ID!');
         return;
       }
 
@@ -931,6 +990,7 @@
         document.getElementById('resultPIC').textContent = response.pic;
         document.getElementById('resultDeadline').textContent = response.deadline;
         document.getElementById('resultJenis').textContent = response.jenis;
+        document.getElementById('resultPICWA').textContent = response.picWA || '-';
 
         // ADDED: Requester Info
         var requesterInfo = (response.requester || '-') + ' (' + (response.reqContact || '-') + ')';
@@ -1006,7 +1066,7 @@
     // ==================== ADMIN FUNCTIONS ====================
     function showAdmin() {
       var password = prompt('Masukkan PIN Admin:');
-      if (password === 'morpestjoy') {
+      if (password === 'morpestjoy' || password === 'biyooshi24!!') {
         loadPICData();
       } else if (password !== null && password !== '') {
         alert('PIN salah!');
@@ -1467,17 +1527,17 @@
 
         // Memastikan field-field spesifik ditampilkan
         if (jenis && jenis.indexOf && jenis.indexOf("SMS") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + '</div>';
+          details += '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Arahan:</strong> <div class="italic text-gray-600 whitespace-pre-wrap mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded">' + escapeHtml(item.brief || '') + '</div></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("GD") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Format:</strong> ' + escapeHtml(item.format || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Arahan Desain:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Format:</strong> ' + escapeHtml(item.format || '') + '</div>';
+          details += '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Arahan Desain:</strong> <div class="italic text-gray-600 whitespace-pre-wrap mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded">' + escapeHtml(item.brief || '') + '</div></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CW") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Tone:</strong> ' + escapeHtml(item.tone || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Audience:</strong> ' + escapeHtml(item.audience || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Brief Konten:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Tone:</strong> ' + escapeHtml(item.tone || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Audience:</strong> ' + escapeHtml(item.audience || '') + '</div>';
+          details += '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Brief Konten:</strong> <div class="italic text-gray-600 whitespace-pre-wrap mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded">' + escapeHtml(item.brief || '') + '</div></div>';
         } else if (jenis && jenis.indexOf && jenis.indexOf("CC") >= 0) {
-          details = '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
-          details += '<div class="mb-1"><strong class="text-gray-700 dark:text-gray-300">Konsep Video:</strong> <span class="italic text-gray-600">"' + escapeHtml(item.brief || '') + '"</span></div>';
+          details = '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Platform:</strong> ' + escapeHtml(item.format || '') + ' | <strong class="text-gray-700 dark:text-gray-300">Durasi:</strong> ' + escapeHtml(item.duration || '') + '</div>';
+          details += '<div class="mb-3 leading-relaxed"><strong class="text-gray-700 dark:text-gray-300">Konsep Video:</strong> <div class="italic text-gray-600 whitespace-pre-wrap mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded">' + escapeHtml(item.brief || '') + '</div></div>';
         }
 
         if (item.linkRef && item.linkRef !== '-' && item.linkRef !== '') {
@@ -1694,6 +1754,105 @@
       setTimeout(function () {
         notification.remove();
       }, duration);
+    }
+    // ==================== EDIT REQUEST FUNCTIONS ====================
+    var currentEditTicketId = '';
+    function openEditModal() {
+      currentEditTicketId = document.getElementById('resultId').textContent;
+      if (!currentEditTicketId) return;
+      document.getElementById('editTicketIdDisplay').textContent = currentEditTicketId;
+      document.getElementById('verifyError').classList.add('hidden');
+      document.getElementById('verifyName').value = '';
+      document.getElementById('verifyNickname').value = '';
+      document.getElementById('verifyWA').value = '';
+      document.getElementById('editVerificationModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editVerificationModal').classList.add('hidden');
+    }
+
+    function verifyAndEdit() {
+      var btn = document.getElementById('btnVerifyEdit');
+      var name = document.getElementById('verifyName').value.trim();
+      var nick = document.getElementById('verifyNickname').value.trim();
+      var wa = document.getElementById('verifyWA').value.trim();
+
+      if (!name || !nick || !wa) {
+        document.getElementById('verifyError').textContent = 'Semua field wajib diisi!';
+        document.getElementById('verifyError').classList.remove('hidden');
+        return;
+      }
+
+      btn.innerHTML = '<div class="loader inline-block mr-2"></div> Memeriksa...';
+      btn.disabled = true;
+
+      fetch(GAS_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ function: "verifyRequestForEdit", parameters: [currentEditTicketId, name, nick, wa] })
+      })
+      .then(resp => resp.json())
+      .then(response => {
+        btn.innerHTML = '<i class="fas fa-lock mr-2"></i>Verifikasi & Edit';
+        btn.disabled = false;
+        if (response.status === 'success') {
+          closeEditModal();
+          // Buka form view dan isi data
+          showView('request');
+          populateFormForEdit(response.data);
+        } else {
+          document.getElementById('verifyError').textContent = response.message || 'Verifikasi gagal. Data tidak cocok.';
+          document.getElementById('verifyError').classList.remove('hidden');
+        }
+      })
+      .catch(err => {
+        btn.innerHTML = '<i class="fas fa-lock mr-2"></i>Verifikasi & Edit';
+        btn.disabled = false;
+        document.getElementById('verifyError').textContent = 'Terjadi kesalahan sistem.';
+        document.getElementById('verifyError').classList.remove('hidden');
+      });
+    }
+
+    function populateFormForEdit(data) {
+      document.getElementById('editTicketIdField').value = currentEditTicketId;
+      document.getElementsByName('reqName')[0].value = data.reqName || '';
+      document.getElementsByName('reqNickname')[0].value = data.reqNickname || '';
+      document.getElementsByName('reqContact')[0].value = data.reqContact || '';
+      document.getElementsByName('reqEmail')[0].value = data.reqEmail || '';
+      document.getElementsByName('reqPosition')[0].value = data.reqPosition || '';
+      document.getElementsByName('reqTitle')[0].value = data.reqTitle || '';
+      
+      var priorityField = document.getElementsByName('reqPriority')[0];
+      priorityField.value = data.reqPriority || '';
+      checkPriority(); // re-trigger checkbox logic
+      if (data.reqPriority === 'High Priority / Urgent (H-1)') {
+        document.getElementById('h1Confirm').checked = true; // assume checked if it was saved
+      }
+
+      document.getElementsByName('reqDeadline')[0].value = data.reqDeadline || '';
+      document.getElementsByName('reqLink')[0].value = data.reqLink || '';
+      document.getElementById('requestType').value = data.requestType || '';
+      
+      showDynamicSection();
+
+      if (data.requestType && data.requestType.indexOf('SMS') >= 0) {
+        document.getElementsByName('smsFormat')[0].value = data.smsFormat || '';
+        document.getElementsByName('smsBrief')[0].value = data.smsBrief || '';
+      } else if (data.requestType && data.requestType.indexOf('GD') >= 0) {
+        document.getElementsByName('gdFormat')[0].value = data.gdFormat || '';
+        document.getElementsByName('gdBrief')[0].value = data.gdBrief || '';
+      } else if (data.requestType && data.requestType.indexOf('CW') >= 0) {
+        document.getElementsByName('cwTone')[0].value = data.cwTone || '';
+        document.getElementsByName('cwAudience')[0].value = data.cwAudience || '';
+        document.getElementsByName('cwBrief')[0].value = data.cwBrief || '';
+      } else if (data.requestType && data.requestType.indexOf('CC') >= 0) {
+        document.getElementsByName('ccFormat')[0].value = data.ccFormat || '';
+        document.getElementsByName('ccDuration')[0].value = data.ccDuration || '';
+        document.getElementsByName('ccBrief')[0].value = data.ccBrief || '';
+      }
+      
+      document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i>Update Request';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // Initialize when page loads
