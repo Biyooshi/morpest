@@ -896,8 +896,8 @@ var WA_CONFIG = {
   RATE_WINDOW_MIN: 10,    // panjang window rate limit (menit)
   MIN_DELAY_MS: 6000,     // jeda acak minimum antar pesan dalam 1 batch (6 detik)
   MAX_DELAY_MS: 18000,    // jeda acak maksimum antar pesan (18 detik)
-  QUIET_START_HOUR: 8,    // jam paling awal boleh mengirim (WIB)
-  QUIET_END_HOUR: 21,     // jam berhenti mengirim (WIB, 21 = sampai 20:59)
+  QUIET_START_HOUR: 6,    // jam paling awal boleh mengirim (WIB)
+  QUIET_END_HOUR: 22,     // jam berhenti mengirim (WIB, 22 = sampai 21:59)
   MAX_ATTEMPTS: 3         // maksimal percobaan sebelum pesan ditandai FAILED
 };
  
