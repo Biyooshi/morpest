@@ -1792,7 +1792,7 @@
       .then(response => {
         btn.innerHTML = '<i class="fas fa-lock mr-2"></i>Verifikasi & Edit';
         btn.disabled = false;
-        if (response.status === 'success') {
+        if (response.success) {
           closeEditModal();
           // Buka form view dan isi data
           showView('request');
