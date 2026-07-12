@@ -819,6 +819,13 @@
       if (viewName === 'request') {
         document.getElementById('viewRequest').classList.remove('hidden');
         currentView = 'request';
+        // Reset to new request state when view is shown
+        document.getElementById('mainForm').reset();
+        if(document.getElementById('editTicketIdField')) document.getElementById('editTicketIdField').value = '';
+        document.getElementById('dynamicContainer').classList.add('hidden');
+        var btn = document.getElementById('submitBtn');
+        if(btn) btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Request';
+        if(typeof checkSubmitConditions === 'function') checkSubmitConditions();
       } else if (viewName === 'success') {
         document.getElementById('viewSuccess').classList.remove('hidden');
         currentView = 'success';
@@ -1848,7 +1855,7 @@
         document.getElementsByName('ccBrief')[0].value = data.ccBrief || '';
       }
       
-      document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i>Update Request';
+      document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i>Simpan Perubahan';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
