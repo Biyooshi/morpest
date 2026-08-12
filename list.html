@@ -492,10 +492,10 @@
                 if (row.finalLink && row.finalLink.length > 3) {
                     var links = String(row.finalLink).split(/[\n,]+/);
                     finalLinkCell = '<div class="flex flex-col gap-1">';
-                    for(var idx=0; idx < links.length; idx++) {
-                       var lnk = links[idx].trim();
+                    for(var linkIdx=0; linkIdx < links.length; linkIdx++) {
+                       var lnk = links[linkIdx].trim();
                        if(lnk !== '') {
-                         finalLinkCell += '<a href="' + lnk + '" target="_blank" class="text-green-600 font-bold hover:underline text-[10px] bg-green-50 px-1 py-0.5 rounded border border-green-200"><i class="fas fa-check"></i> L'+(idx+1)+'</a>';
+                         finalLinkCell += '<a href="' + lnk + '" target="_blank" class="text-green-600 font-bold hover:underline text-[10px] bg-green-50 px-1 py-0.5 rounded border border-green-200"><i class="fas fa-check"></i> L'+(linkIdx+1)+'</a>';
                        }
                     }
                     finalLinkCell += '</div>';

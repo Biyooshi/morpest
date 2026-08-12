@@ -1408,10 +1408,10 @@
           if (finalLinkValue && String(finalLinkValue).trim() !== '') {
             cardHtml += '<div class="flex flex-wrap gap-2 mt-2">';
             var links = String(finalLinkValue).split(/[\n,]+/);
-            for(var idx=0; idx < links.length; idx++) {
-               var lnk = links[idx].trim();
+            for(var linkIdx=0; linkIdx < links.length; linkIdx++) {
+               var lnk = links[linkIdx].trim();
                if(lnk !== '') {
-                 cardHtml += '<a href="' + escapeAttr(lnk) + '" target="_blank" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 flex items-center gap-1 shadow-sm"><i class="fas fa-external-link-alt"></i> Link ' + (idx+1) + '</a>';
+                 cardHtml += '<a href="' + escapeAttr(lnk) + '" target="_blank" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 flex items-center gap-1 shadow-sm"><i class="fas fa-external-link-alt"></i> Link ' + (linkIdx+1) + '</a>';
                }
             }
             cardHtml += '</div>';
