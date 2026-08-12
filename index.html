@@ -1976,7 +1976,7 @@
         { key: 'cmo', title: 'Chief Marketing Officer (CMO)', color: 'purple' },
         { key: 'sms', title: 'Social Media Specialist (SMS)', color: 'blue' },
         { key: 'gd', title: 'Graphic Designer (GD)', color: 'orange' },
-        { key: 'cw', title: 'Copywriter (CW)', color: 'green' },
+        { key: 'cw', title: 'Content Writer (CW)', color: 'green' },
         { key: 'cc', title: 'Content Creator (CC)', color: 'red' }
       ];
 
@@ -1986,13 +1986,19 @@
           html += `<h3 class="text-lg font-bold text-${sec.color}-600 dark:text-${sec.color}-400 mb-4 mt-6 border-b pb-2"><i class="fas fa-users mr-2"></i>${sec.title}</h3>`;
           html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
           team.forEach(person => {
+            let badge = '';
+            if (['Riska Stephanie', 'Fanisa Aulia Nur Hakmalia', 'Benedict Jemima Cecilia Pietersz'].includes(person.name)) {
+              badge = '<span class="ml-2 bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Head</span>';
+            } else if (['Naya Azani', 'Dita Dara', 'Ridatasa Nadiawati'].includes(person.name)) {
+              badge = '<span class="ml-2 bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">Co-Head</span>';
+            }
             html += `
               <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border dark:border-gray-600 flex items-center justify-between">
                 <div>
-                  <p class="font-bold text-gray-800 dark:text-gray-100">${person.name}</p>
+                  <p class="font-bold text-gray-800 dark:text-gray-100 flex items-center flex-wrap gap-y-1">${person.name} ${badge}</p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">${person.nickname}</p>
                 </div>
-                <a href="https://wa.me/${person.phone}?text=Halo%20${person.nickname},%20saya%20ingin%20bertanya%20mengenai..." target="_blank" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-md transition-transform transform hover:scale-110 flex items-center justify-center w-10 h-10">
+                <a href="https://wa.me/${person.phone}?text=Halo%20${person.nickname},%20saya%20ingin%20bertanya%20mengenai..." target="_blank" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-md transition-transform transform hover:scale-110 flex items-center justify-center w-10 h-10 flex-shrink-0">
                   <i class="fab fa-whatsapp text-lg"></i>
                 </a>
               </div>
