@@ -692,7 +692,7 @@
   </div>
 
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxYXCwsWW0h8i8rdhWQpmPOnWpw7WQi_CcNAaPcGY6OjWyxRu6JFauM3VGj0i9uWj6_vg/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbymDdLMqDZanSXAoq2RUmVd99chDo8FQEACWXJPrXFZR6Sm-CBNaqzyxIDMUUNn9p-QKA/exec";
     // Global variables
     var picData = {};
 
@@ -1115,9 +1115,15 @@
         method: "POST",
         body: JSON.stringify({ function: "getAdminData", parameters: [] })
       })
-      .then(resp => resp.json())
-      .then(data => {
-        renderAdminData(data.data || data);
+      .then(resp => resp.text())
+      .then(text => {
+        try {
+          var data = JSON.parse(text);
+          renderAdminData(data.data || data);
+        } catch(e) {
+          console.error("Raw response:", text);
+          throw new Error("Server membalas dengan HTML/Error (bukan JSON). Coba Refresh halaman (F5) atau cek console. Respons server: " + text.substring(0, 150));
+        }
       })
       .catch(error => {
           document.getElementById('adminContainer').innerHTML = `
