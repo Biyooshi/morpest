@@ -246,6 +246,12 @@
       <div id="viewRequest">
         <div class="mb-6 text-center relative pt-10 md:pt-0">
           <div class="absolute top-0 right-0 flex gap-2">
+            <button type="button" onclick="startTutorial()" class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-400 px-3 py-1 text-sm font-bold rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors hidden md:block">
+              <i class="fas fa-play-circle mr-1"></i> Tutorial
+            </button>
+            <button type="button" onclick="openContactCenter()" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-400 px-3 py-1 text-sm font-bold rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors hidden md:block">
+              <i class="fas fa-address-book mr-1"></i> Contact
+            </button>
             <button type="button" onclick="toggleDarkMode()" class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 text-sm font-bold rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
               <i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i>
             </button>
@@ -1397,15 +1403,19 @@
           cardHtml += '</div>';
           cardHtml += '<div class="mt-3">';
           cardHtml += '<label class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase block mb-1">Link Final Asset (Isi = Status Done)</label>';
-          cardHtml += '<div class="flex gap-2">';
           var finalLinkValue = item.finalLink || '';
-          cardHtml += '<input type="text" id="link-' + escapeAttr(itemId) + '" value="' + escapeAttr(finalLinkValue) + '" class="flex-1 text-sm border border-gray-300 rounded p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Paste link hasil kerja disini..." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">';
+          cardHtml += '<textarea id="link-' + escapeAttr(itemId) + '" rows="2" class="w-full text-sm border border-gray-300 rounded p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Paste link hasil kerja disini... Pisahkan dengan baris baru atau koma jika lebih dari satu link." onchange="onFinalLinkChange(\'' + escapeAttr(itemId) + '\')">' + escapeHtml(finalLinkValue) + '</textarea>';
           if (finalLinkValue && String(finalLinkValue).trim() !== '') {
-            cardHtml += '<a href="' + escapeAttr(finalLinkValue) + '" target="_blank" class="bg-blue-500 text-white px-3 rounded text-sm hover:bg-blue-600 flex items-center">';
-            cardHtml += '<i class="fas fa-external-link-alt"></i>';
-            cardHtml += '</a>';
+            cardHtml += '<div class="flex flex-wrap gap-2 mt-2">';
+            var links = String(finalLinkValue).split(/[\n,]+/);
+            for(var idx=0; idx < links.length; idx++) {
+               var lnk = links[idx].trim();
+               if(lnk !== '') {
+                 cardHtml += '<a href="' + escapeAttr(lnk) + '" target="_blank" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 flex items-center gap-1 shadow-sm"><i class="fas fa-external-link-alt"></i> Link ' + (idx+1) + '</a>';
+               }
+            }
+            cardHtml += '</div>';
           }
-          cardHtml += '</div>';
           cardHtml += '</div>';
           cardHtml += '<div class="flex gap-2 mt-3">';
           var escapedJudul = escapeAttr(item.judul || '');
@@ -1876,6 +1886,132 @@
           requestType.addEventListener('change', showDynamicSection);
         }
       }, 100);
+    }
+  </script>
+
+  <!-- Driver.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/6285233142178?text=Halo%20Admin%20Morpest,%20saya%20ingin%20melaporkan%20masalah..." target="_blank" class="fixed bottom-6 right-6 bg-green-500 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-transform transform hover:scale-110 z-50 animate-pulse cursor-pointer">
+    <i class="fab fa-whatsapp text-3xl"></i>
+  </a>
+
+  <!-- Contact Center Modal -->
+  <div id="contactCenterModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-gray-900 rounded-t-lg">
+        <h2 class="text-xl font-bold text-blue-800 dark:text-blue-400"><i class="fas fa-address-book mr-2"></i>Marketing Contact Center</h2>
+        <button onclick="closeContactCenter()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto" id="contactCenterContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Product Tour (Spotlight)
+    function startTutorial() {
+      const driver = window.driver.js.driver;
+      const driverObj = driver({
+        showProgress: true,
+        steps: [
+          { element: '#reqName', popover: { title: 'Nama Lengkap', description: 'Masukkan nama lengkap Anda.', side: "top", align: 'start' }},
+          { element: '#reqPosition', popover: { title: 'Posisi', description: 'Pilih posisi Anda di Job On Yours.', side: "top", align: 'start' }},
+          { element: '#requestType', popover: { title: 'Jenis Request', description: 'Pilih jenis request marketing (SMS, GD, CW, CC).', side: "top", align: 'start' }},
+          { element: '#reqTitle', popover: { title: 'Judul Request', description: 'Isi judul yang singkat dan jelas.', side: "top", align: 'start' }},
+          { element: '#reqLinkRef', popover: { title: 'Link Referensi', description: 'Wajib bagi Non-Marketing! Sertakan link gdrive atau docs yang berisi aset referensi.', side: "top", align: 'start' }},
+          { element: '#submitBtn', popover: { title: 'Submit Request', description: 'Setelah checklist disetujui, klik tombol ini untuk mengirim request.', side: "top", align: 'start' }},
+        ]
+      });
+      driverObj.drive();
+    }
+
+    // Contact Center Data & Logic
+    function getPICData() {
+      return {
+        "sms": [
+          { name: "Riska Stephanie", nickname: "Ika", phone: "62895352730008", email: "riskastphnie28@gmail.com" },
+          { name: "Naya Azani", nickname: "Naya", phone: "62895391527014", email: "nayaazani13@gmail.com" },
+          { name: "Meitia Kurniawati", nickname: "Mei", phone: "6282247765358", email: "meitiakurniawati@gmail.com" },
+          { name: "Muhamad Farhan", nickname: "Aan", phone: "6289531974196", email: "aan.hans12@gmail.com" },
+          { name: "Kladya Khoirunisa\' Hapsari", nickname: "Kladya", phone: "6285645111043", email: "kladyakhoirunisakh@gmail.com" },
+          { name: "Shellbitav Azazel", nickname: "Shelby", phone: "6285172283505", email: "ch3llb14z@gmail.com" }
+        ],
+        "gd": [
+          { name: "Fanisa Aulia Nur Hakmalia", nickname: "Fanisa", phone: "6281357557510", email: "fanisaanh@gmail.com" },
+          { name: "Dita Dara", nickname: "Dita", phone: "6289665060586", email: "dd.is.ditadara@gmail.com" },
+          { name: "Yusmita Alya Melanie", nickname: "Alya", phone: "6285792300256", email: "yusmitaalya@gmail.com" },
+          { name: "Syafa Salsabila", nickname: "Syafa", phone: "62882003120378", email: "syafasalsabila226@gmail.com" },
+          { name: "Lidia Siregar", nickname: "Lidia", phone: "6281316207014", email: "kembaroktober06@gmail.com" },
+          { name: "Mulqy Azzam", nickname: "Azzam", phone: "6281770094378", email: "mulqyazzam41@gmail.com" },
+          { name: "Fiorentina Auvillia Oenang", nickname: "Fio", phone: "6282181777228", email: "Fiorentinaauvillia3@gmail.com" },
+          { name: "Muhammad Ramadhani", nickname: "Dhani", phone: "6282325795876", email: "muhammadramadhani030909@gmail.com" }
+        ],
+        "cw": [
+          { name: "Benedict Jemima Cecilia Pietersz", nickname: "Ben", phone: "6282114887824", email: "bjcpietersz47@gmail.com" },
+          { name: "Ridatasa Nadiawati", nickname: "Rida", phone: "6289656144248", email: "Ridatasa@gmail.com" },
+          { name: "Sidik Permana", nickname: "Sidik", phone: "6285321200416", email: "sidiksipengelana@gmail.com" },
+          { name: "Sevia Rahmadani", nickname: "Via", phone: "6285709598764", email: "seviarahmadani9@gmail.com" },
+          { name: "Mayang Anggraini", nickname: "Mayang", phone: "628812756505", email: "mayanganggraini242@gmail.com" },
+          { name: "Sri Rahayu Mulyaningsih", nickname: "Ayu", phone: "62895414845637", email: "srirahayuuu2937@gmail.com" }
+        ],
+        "cc": [],
+        "cmo": [
+          { name: "Muhammad Nurul Qolbi", nickname: "Obi", phone: "6285233142178", email: "qolbi@joy.internal" }
+        ]
+      };
+    }
+
+    function renderContactCenter() {
+      const data = getPICData();
+      const container = document.getElementById('contactCenterContent');
+      let html = '';
+      
+      const sections = [
+        { key: 'cmo', title: 'Chief Marketing Officer (CMO)', color: 'purple' },
+        { key: 'sms', title: 'Social Media Specialist (SMS)', color: 'blue' },
+        { key: 'gd', title: 'Graphic Designer (GD)', color: 'orange' },
+        { key: 'cw', title: 'Copywriter (CW)', color: 'green' },
+        { key: 'cc', title: 'Content Creator (CC)', color: 'red' }
+      ];
+
+      sections.forEach(sec => {
+        const team = data[sec.key];
+        if(team && team.length > 0) {
+          html += `<h3 class="text-lg font-bold text-${sec.color}-600 dark:text-${sec.color}-400 mb-4 mt-6 border-b pb-2"><i class="fas fa-users mr-2"></i>${sec.title}</h3>`;
+          html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+          team.forEach(person => {
+            html += `
+              <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border dark:border-gray-600 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-gray-800 dark:text-gray-100">${person.name}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">${person.nickname}</p>
+                </div>
+                <a href="https://wa.me/${person.phone}?text=Halo%20${person.nickname},%20saya%20ingin%20bertanya%20mengenai..." target="_blank" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-md transition-transform transform hover:scale-110 flex items-center justify-center w-10 h-10">
+                  <i class="fab fa-whatsapp text-lg"></i>
+                </a>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+      });
+      
+      container.innerHTML = html;
+    }
+
+    function openContactCenter() {
+      document.getElementById('contactCenterModal').classList.remove('hidden');
+      renderContactCenter();
+    }
+    
+    function closeContactCenter() {
+      document.getElementById('contactCenterModal').classList.add('hidden');
     }
   </script>
 
